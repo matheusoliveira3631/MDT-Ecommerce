@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
+import { store } from "@/data/mock";
+import { fontVariables } from "./fonts";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: {
+    default: store.nome,
+    template: `%s · ${store.nome}`,
+  },
+  description: store.descricao,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="pt-BR" className={fontVariables}>
+      <body>
+        {children}
+        <WhatsAppFab phone={store.whatsapp.numero} message={store.whatsapp.mensagemPadrao} />
+      </body>
+    </html>
+  );
+}
