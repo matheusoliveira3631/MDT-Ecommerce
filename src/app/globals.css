@@ -106,6 +106,12 @@
   background-size: 18px 18px;
 }
 
+@utility bg-placeholder-white {
+  background-color: var(--color-white);
+  background-image: radial-gradient(var(--color-rose-200) 1.5px, transparent 1.6px);
+  background-size: 18px 18px;
+}
+
 /* Container padrão de todas as páginas */
 @utility container-page {
   width: 100%;

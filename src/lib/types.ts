@@ -62,4 +62,32 @@ export interface StoreConfig {
   instagram: string;
   cnpj: string;
   meiosPagamento: string[];
+  /** `null` esconde o banner. */
+  bannerSazonal: SeasonalBanner | null;
+}
+
+export interface SeasonalBanner {
+  destaque: string;
+  titulo: string;
+  texto: string;
+  cta: NavLink;
+  imagem?: string;
+}
+
+export interface Step {
+  titulo: string;
+  texto: string;
+}
+
+export interface Testimonial {
+  quote: string;
+  author: string;
+  occasion: string;
+  photo?: string;
+}
+
+export interface InstagramPost {
+  href: string;
+  foto?: string;
+  alt?: string;
 }

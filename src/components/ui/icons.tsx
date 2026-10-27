@@ -108,6 +108,34 @@ export function ImageIcon(props: IconProps) {
   );
 }
 
+export function PencilIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20l4-1 11-11-3-3L5 16l-1 4z" />
+    </Svg>
+  );
+}
+
+export function TruckIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M3 7h11v9H3z" />
+      <path d="M14 10h4l3 3v3h-7" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </Svg>
+  );
+}
+
+export function CardIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <path d="M3 10h18" />
+    </Svg>
+  );
+}
+
 export function Spinner({ size = 18 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" className="animate-spin">

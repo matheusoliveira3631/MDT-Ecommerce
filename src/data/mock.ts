@@ -1,4 +1,4 @@
-import type { Category, NavLink, Product, StoreConfig } from "@/lib/types";
+import type { Category, InstagramPost, NavLink, Product, Step, StoreConfig, Testimonial } from "@/lib/types";
 
 /*
  * Dados mockados. Os valores entre colchetes são placeholders do design:
@@ -20,6 +20,12 @@ export const store: StoreConfig = {
   instagram: "[seuinstagram]",
   cnpj: "[00.000.000/0001-00]",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
+  bannerSazonal: {
+    destaque: "coleção de fim de ano",
+    titulo: "Natal com mimos para presentear quem você ama",
+    texto: "Encomendas abertas até [data limite]. Garanta a produção a tempo da sua ceia.",
+    cta: { label: "Conhecer a coleção", href: "/categoria/datas-especiais" },
+  },
 };
 
 export const categories: Category[] = [
@@ -102,5 +108,27 @@ export const products: Product[] = [
     estoque: 0,
   },
 ];
+
+export const featuredProducts: Product[] = products.slice(0, 4);
+
+export const steps: Step[] = [
+  { titulo: "Escolha o produto", texto: "Navegue pelas categorias e escolha a peça e a quantidade." },
+  { titulo: "Conte o seu tema", texto: "Informe tema, nome, idade e cores. Pode enviar uma referência." },
+  { titulo: "Aprove a arte", texto: "Enviamos a arte pelo WhatsApp. Ajustamos até ficar do seu jeito." },
+  { titulo: "Receba em casa", texto: "Produzimos com carinho e enviamos para todo o Brasil." },
+];
+
+/** Em produção, lista vazia esconde a seção inteira. */
+export const testimonials: Testimonial[] = Array.from({ length: 3 }, () => ({
+  quote: "[Depoimento real de cliente, com a ocasião e o produto comprado]",
+  author: "[Nome da cliente]",
+  occasion: "[Ocasião · produto]",
+}));
+
+/** Em produção, lista vazia esconde a seção inteira. */
+export const instagramPosts: InstagramPost[] = Array.from({ length: 6 }, (_, i) => ({
+  href: `https://instagram.com/${store.instagram}`,
+  alt: `Post ${i + 1} do Instagram`,
+}));
 
 export const cartCount = 2;
