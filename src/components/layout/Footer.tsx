@@ -9,13 +9,25 @@ export type FooterProps =
 const footerLink = "text-ink-on-dark no-underline hover:text-white hover:underline";
 const columnTitle = "mb-1 font-heading font-bold text-white";
 
+const legalLinks = [
+  { label: "Privacidade", href: "/privacidade" },
+  { label: "Termos de uso", href: "/termos" },
+];
+
 function LegalRow({ store }: { store: StoreConfig }) {
   return (
     <>
       <span>
         © {new Date().getFullYear()} {store.nome} · CNPJ {store.cnpj}
       </span>
-      <span>{store.meiosPagamento.join(" · ")}</span>
+      <span className="flex flex-wrap gap-x-4 gap-y-1">
+        {legalLinks.map((l) => (
+          <Link key={l.href} href={l.href} className={footerLink}>
+            {l.label}
+          </Link>
+        ))}
+        <span>{store.meiosPagamento.join(" · ")}</span>
+      </span>
     </>
   );
 }
