@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useId, useRef, useState, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useId, useRef, useState, type ReactNode } from "react";
+import { useCart } from "@/components/cart/CartProvider";
 import { whatsappHref } from "@/components/layout/WhatsAppFab";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { ColorSwatches } from "@/components/ui/ColorSwatches";
@@ -11,11 +13,10 @@ import { TextArea, TextField } from "@/components/ui/TextField";
 import { ThemeChips } from "@/components/ui/ThemeChips";
 import { Toast } from "@/components/ui/Toast";
 import { calculateShippingMock } from "@/data/mock";
+import { OTHER_THEME, type CartLine, type Personalizacao } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { ShippingCalculator } from "./ShippingCalculator";
-
-const OTHER_THEME = "Outro tema";
 
 export interface ProductFormProps {
   product: Product;
@@ -37,17 +38,51 @@ function Legend({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   );
 }
 
-export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormProps) {
+/**
+ * Formulário de personalização. Com `?editar=<id da linha>` abre preenchido e salva
+ * a linha da sacola em vez de adicionar outra.
+ */
+export function ProductForm(props: ProductFormProps) {
+  // useSearchParams precisa de Suspense para a página continuar estática
+  return (
+    <Suspense fallback={<ProductFormFields {...props} />}>
+      <EditAwareForm {...props} />
+    </Suspense>
+  );
+}
+
+function EditAwareForm(props: ProductFormProps) {
+  const editId = useSearchParams().get("editar");
+  const { lines } = useCart();
+  const editLine = lines.find((l) => l.id === editId && l.produtoSlug === props.product.slug);
+  // Remonta quando a linha aparece (a sacola é lida do navegador depois da hidratação)
+  return <ProductFormFields key={editLine?.id ?? "novo"} {...props} editLine={editLine} />;
+}
+
+const optional = (value: FormDataEntryValue | null) => {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text || undefined;
+};
+
+function ProductFormFields({
+  product,
+  whatsapp,
+  referenciaMaxMB,
+  editLine,
+}: ProductFormProps & { editLine?: CartLine }) {
+  const router = useRouter();
+  const { addLine, updateLine, openDrawer } = useCart();
+  const initial = editLine?.personalizacao;
   const formId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const soldOut = !product.ativo || product.estoque <= 0;
   const temas = [...product.temas, OTHER_THEME];
 
-  const [tema, setTema] = useState(temas[0]);
-  const [temaOutro, setTemaOutro] = useState("");
-  const [nome, setNome] = useState("");
-  const [cor, setCor] = useState(product.cores[0]?.nome ?? "");
-  const [quantidade, setQuantidade] = useState(product.pedidoMinimo);
+  const [tema, setTema] = useState(initial?.tema ?? temas[0]);
+  const [temaOutro, setTemaOutro] = useState(initial?.temaOutro ?? "");
+  const [nome, setNome] = useState(initial?.nome ?? "");
+  const [cor, setCor] = useState(initial?.cor ?? product.cores[0]?.nome ?? "");
+  const [quantidade, setQuantidade] = useState(editLine?.quantidade ?? product.pedidoMinimo);
   const [errors, setErrors] = useState<Errors>({});
   const [toast, setToast] = useState<string | null>(null);
   const dismissToast = useCallback(() => setToast(null), []);
@@ -66,9 +101,34 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
       return;
     }
 
-    // A sacola (estado, CartDrawer e badge do cabeçalho) entra na etapa do carrinho.
-    setToast(`Adicionado à sacola: ${product.nome}`);
+    const data = new FormData(e.currentTarget);
+    const file = data.get("referencia");
+    const personalizacao: Personalizacao = {
+      tema,
+      temaOutro: tema === OTHER_THEME ? temaOutro.trim() : undefined,
+      nome: nome.trim(),
+      idadeOcasiao: optional(data.get("idadeOcasiao")),
+      cor,
+      referenciaNome: file instanceof File && file.name ? file.name : initial?.referenciaNome,
+      observacoes: optional(data.get("observacoes")),
+    };
+
+    if (editLine) {
+      updateLine(editLine.id, { quantidade, personalizacao });
+      router.push("/sacola");
+      return;
+    }
+
+    addLine({ produtoSlug: product.slug, quantidade, personalizacao });
+    // Desktop: sacola lateral. Mobile: toast com "Ver sacola".
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      openDrawer(e.nativeEvent instanceof SubmitEvent ? (e.nativeEvent.submitter as HTMLElement | null) : null);
+    } else {
+      setToast(`Adicionado à sacola: ${product.nome}`);
+    }
   }
+
+  const submitLabel = editLine ? "Salvar alterações" : "Adicionar à sacola";
 
   const unitPrice = formatPrice(product.precoBase);
 
@@ -109,6 +169,7 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
               name="idadeOcasiao"
               label="Idade ou ocasião (opcional)"
               placeholder="Ex.: 3 aninhos, Batizado"
+              defaultValue={initial?.idadeOcasiao}
             />
           </div>
         </fieldset>
@@ -130,6 +191,9 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
               title="Envie uma imagem do convite ou da decoração"
               formats="JPG ou PNG"
             />
+            {initial?.referenciaNome && (
+              <p className="mt-2 mb-0 text-sm text-ink-muted">Referência atual: {initial.referenciaNome}</p>
+            )}
           </fieldset>
         )}
 
@@ -141,6 +205,7 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
           maxLength={500}
           counterFrom={400}
           labelClassName="font-heading text-[17px]"
+          defaultValue={initial?.observacoes}
         />
 
         {soldOut ? (
@@ -151,7 +216,7 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
           <div className="flex flex-wrap items-stretch gap-3">
             <QuantityStepper value={quantidade} onChange={setQuantidade} min={product.pedidoMinimo} size="lg" />
             <Button type="submit" size="lg" icon={<BagIcon size={20} strokeWidth={1.8} />} className="flex-[1_1_220px]">
-              Adicionar à sacola
+              {submitLabel}
             </Button>
           </div>
         )}
@@ -188,7 +253,7 @@ export function ProductForm({ product, whatsapp, referenciaMaxMB }: ProductFormP
             <span className="text-xs text-ink-muted">por unidade</span>
           </span>
           <Button type="submit" form={formId} className="flex-1">
-            Adicionar à sacola
+            {submitLabel}
           </Button>
         </div>
       )}

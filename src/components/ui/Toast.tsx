@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { cn } from "@/lib/format";
-import type { NavLink } from "@/lib/types";
 import { CheckIcon } from "./icons";
+
+export type ToastAction = { label: string } & ({ href: string; onClick?: never } | { onClick: () => void; href?: never });
 
 export interface ToastProps {
   /** `null` esconde o toast. */
   message: string | null;
-  action?: NavLink;
+  action?: ToastAction;
   onDismiss: () => void;
   /** Some sozinho depois deste tempo (ms). */
   duration?: number;
   className?: string;
 }
+
+const actionClass = "flex min-h-11 items-center text-sm font-extrabold text-rose-200 hover:text-white";
 
 /**
  * Fundo ink, check em círculo rose-100. A região `role="status"` fica sempre montada
@@ -38,10 +41,15 @@ export function Toast({ message, action, onDismiss, duration = 4000, className }
             <CheckIcon size={18} />
           </span>
           <span className="flex-1 text-body font-semibold">{message}</span>
-          {action && (
-            <Link href={action.href} className="flex min-h-11 items-center text-sm font-extrabold text-rose-200 hover:text-white">
+          {action?.href != null && (
+            <Link href={action.href} className={actionClass}>
               {action.label}
             </Link>
+          )}
+          {action?.onClick && (
+            <button type="button" onClick={action.onClick} className={cn(actionClass, "cursor-pointer")}>
+              {action.label}
+            </button>
           )}
         </div>
       )}

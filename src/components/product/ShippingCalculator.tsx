@@ -7,10 +7,18 @@ import type { ShippingOption } from "@/lib/types";
 
 export interface ShippingCalculatorProps {
   onCalculate: (cep: string) => Promise<ShippingOption[]>;
+  /** Chamado com a opção escolhida (ou `null` quando o CEP muda ou dá erro). */
+  onSelect?: (option: ShippingOption | null) => void;
   label?: string;
+  placeholder?: string;
 }
 
-export function ShippingCalculator({ onCalculate, label = "Calcular frete" }: ShippingCalculatorProps) {
+export function ShippingCalculator({
+  onCalculate,
+  onSelect,
+  label = "Calcular frete",
+  placeholder = "00000-000",
+}: ShippingCalculatorProps) {
   const id = useId();
   const [cep, setCep] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,6 +32,7 @@ export function ShippingCalculator({ onCalculate, label = "Calcular frete" }: Sh
     if (digits.length !== 8) {
       setError("CEP incompleto. Use 8 números, ex.: 37200-000.");
       setOptions(null);
+      onSelect?.(null);
       return;
     }
     setError(undefined);
@@ -33,9 +42,11 @@ export function ShippingCalculator({ onCalculate, label = "Calcular frete" }: Sh
       if (result.length === 0) {
         setError("Não encontramos esse CEP.");
         setOptions(null);
+        onSelect?.(null);
       } else {
         setOptions(result);
         setChosen(result[0].servico);
+        onSelect?.(result[0]);
       }
     } finally {
       setLoading(false);
@@ -54,7 +65,7 @@ export function ShippingCalculator({ onCalculate, label = "Calcular frete" }: Sh
             type="text"
             inputMode="numeric"
             autoComplete="postal-code"
-            placeholder="00000-000"
+            placeholder={placeholder}
             value={cep}
             onChange={(e) => setCep(maskCep(e.target.value))}
             aria-invalid={error ? true : undefined}
@@ -90,7 +101,10 @@ export function ShippingCalculator({ onCalculate, label = "Calcular frete" }: Sh
                 name={`${id}-frete`}
                 value={option.servico}
                 checked={chosen === option.servico}
-                onChange={() => setChosen(option.servico)}
+                onChange={() => {
+                  setChosen(option.servico);
+                  onSelect?.(option);
+                }}
                 className="size-4 accent-primary"
               />
               <span className="flex-1">

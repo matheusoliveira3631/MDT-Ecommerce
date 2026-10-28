@@ -12,7 +12,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import {
-  cartCount,
   categories,
   featuredProducts,
   helpLinks,
@@ -26,7 +25,7 @@ export default function Home() {
   return (
     <>
       <AnnouncementBar message={store.avisoBarra} />
-      <Header cartCount={cartCount} categories={categories} />
+      <Header categories={categories} />
 
       <main>
         <Hero />

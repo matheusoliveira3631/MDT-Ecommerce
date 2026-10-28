@@ -1,29 +1,13 @@
 import Link from "next/link";
-import { BagIcon, HeartIcon, LockIcon, SearchIcon, UserIcon } from "@/components/ui/icons";
-import { cn, pluralItens } from "@/lib/format";
+import { CartButton } from "@/components/cart/CartButton";
+import { HeartIcon, LockIcon, SearchIcon, UserIcon } from "@/components/ui/icons";
+import { cn } from "@/lib/format";
 import type { Category } from "@/lib/types";
 import { CategoryNav } from "./CategoryNav";
 import { Logo } from "./Logo";
 
 const iconLink =
   "relative flex size-11 items-center justify-center rounded-pill text-ink transition-colors duration-150 ease-out hover:bg-rose-50 hover:text-primary";
-
-export function CartButton({ count }: { count: number }) {
-  const label = count > 0 ? `Sacola, ${pluralItens(count)}` : "Sacola vazia";
-  return (
-    <Link href="/sacola" aria-label={label} className={iconLink}>
-      <BagIcon />
-      {count > 0 && (
-        <span
-          aria-hidden="true"
-          className="absolute top-1 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-pill bg-primary px-1 text-[11px] font-extrabold text-white"
-        >
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </Link>
-  );
-}
 
 export function SearchBar({ defaultQuery, className }: { defaultQuery?: string; className?: string }) {
   return (
@@ -72,7 +56,7 @@ export function CheckoutSteps({ current }: { current: CheckoutStep }) {
         const done = n < current;
         return (
           <li key={step} aria-current={active ? "step" : undefined} className="flex items-center gap-2.5">
-            {i > 0 && <span aria-hidden="true" className="h-px w-7 bg-border-input" />}
+            {i > 0 && <span aria-hidden="true" className="h-px w-5 bg-border-input sm:w-7" />}
             <span className={cn("flex items-center gap-2", active || done ? "text-primary" : "text-ink-muted")}>
               <span
                 className={cn(
@@ -82,7 +66,8 @@ export function CheckoutSteps({ current }: { current: CheckoutStep }) {
               >
                 {n}
               </span>
-              {step}
+              {/* No mobile só a etapa atual mostra o nome; as outras continuam legíveis para leitor de tela */}
+              <span className={cn(!active && "max-sm:sr-only")}>{step}</span>
             </span>
           </li>
         );
@@ -92,8 +77,8 @@ export function CheckoutSteps({ current }: { current: CheckoutStep }) {
 }
 
 export type HeaderProps =
-  | { variant?: "full"; cartCount: number; categories: Category[]; checkoutStep?: never }
-  | { variant: "checkout"; checkoutStep: CheckoutStep; cartCount?: never; categories?: never };
+  | { variant?: "full"; categories: Category[]; checkoutStep?: never }
+  | { variant: "checkout"; checkoutStep: CheckoutStep; categories?: never };
 
 export function Header(props: HeaderProps) {
   if (props.variant === "checkout") {
@@ -111,7 +96,7 @@ export function Header(props: HeaderProps) {
     );
   }
 
-  const { cartCount, categories } = props;
+  const { categories } = props;
   return (
     <header className="border-b border-border bg-white">
       <div className="container-page flex flex-wrap items-center gap-x-6 gap-y-3 py-[18px]">
@@ -124,7 +109,7 @@ export function Header(props: HeaderProps) {
           <Link href="/favoritos" aria-label="Favoritos" className={iconLink}>
             <HeartIcon />
           </Link>
-          <CartButton count={cartCount} />
+          <CartButton className={iconLink} />
         </div>
       </div>
       <CategoryNav

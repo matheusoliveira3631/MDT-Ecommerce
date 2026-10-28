@@ -30,6 +30,7 @@ export const store: StoreConfig = {
   cnpj: "[00.000.000/0001-00]",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
   referenciaMaxMB: null,
+  prazoProducaoPadrao: "[X]",
   politicaEntrega: "[Prazo de produção, opções de envio e retirada, política para produtos personalizados.]",
   bannerSazonal: {
     destaque: "coleção de fim de ano",
@@ -166,6 +167,15 @@ export function getRelatedProducts(slug: string, limit = 4): Product[] {
   return products.filter((p) => p.slug !== slug && p.ativo && p.estoque > 0).slice(0, limit);
 }
 
+/**
+ * Simula a validação de cupom. `MIMO10` é o cupom de exemplo; o valor do desconto
+ * fica `null` (placeholder) até existir a regra real.
+ */
+export async function validateCouponMock(code: string): Promise<{ codigo: string; desconto: number | null } | null> {
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return code.trim().toUpperCase() === "MIMO10" ? { codigo: "MIMO10", desconto: null } : null;
+}
+
 /** Simula a cotação de frete (Melhor Envio ou Correios, a definir). */
 export async function calculateShippingMock(cep: string): Promise<ShippingOption[]> {
   await new Promise((resolve) => setTimeout(resolve, 700));
@@ -175,5 +185,3 @@ export async function calculateShippingMock(cep: string): Promise<ShippingOption
     { servico: "SEDEX", prazo: "[X] dias úteis", valor: null },
   ];
 }
-
-export const cartCount = 2;

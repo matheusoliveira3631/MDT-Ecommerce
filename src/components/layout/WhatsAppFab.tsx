@@ -23,7 +23,7 @@ export function whatsappHref(phone: string, message?: string) {
 export function WhatsAppFab({
   phone,
   message,
-  hiddenOn = ["/checkout"],
+  hiddenOn = ["/sacola", "/checkout"],
   position = "fixed",
 }: WhatsAppFabProps) {
   const pathname = usePathname();

@@ -8,7 +8,7 @@ import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { categories, cartCount, helpLinks, products, store } from "@/data/mock";
+import { categories, helpLinks, products, store } from "@/data/mock";
 import { FieldsDemo, LoadingButtonDemo, ProductGridDemo, StepperDemo } from "./demos";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ function Section({ title, description, children }: { title: string; description?
 export default function ComponentesPage() {
   return (
     <>
-      <Header cartCount={cartCount} categories={categories} />
+      <Header categories={categories} />
 
       <main className="bg-rose-50">
         <div className="container-page flex flex-col gap-10 py-section-sm md:py-16">

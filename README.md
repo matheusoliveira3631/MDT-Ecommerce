@@ -14,5 +14,7 @@ npm run dev   # http://localhost:3000/componentes
 - `src/components/ui`: `Button`, `Badge`, `QuantityStepper`, `TextField`/`TextArea`, ícones.
 - `src/components/layout`: `Header` (`full`/`checkout`), `Footer` (`full`/`compact`), `Logo`, `WhatsAppFab`.
 - `src/components/product`: `ProductCard` (`default`/`compact`).
+- `src/components/cart`: sacola (`CartProvider` com `useCart`, `CartDrawer`, `CartLineItem`, `OrderSummary`, `CouponField`). Por enquanto a sacola fica no `localStorage` do navegador.
+- `src/lib/cart.ts`: tipos do item (`CartLine`, `Personalizacao`) e cálculo de totais.
 - `src/data/mock.ts`: dados mockados. Os valores entre colchetes (`[preço]`, `[X]`, CNPJ, contatos) são placeholders e devem vir dos dados da loja, do produto ou do CMS.
-- `/componentes`: página para conferir os componentes.
+- Rotas: `/`, `/produto/[slug]` (com `?editar=<id>` para editar um item da sacola), `/sacola` e `/componentes` (vitrine dos componentes).

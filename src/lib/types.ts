@@ -80,6 +80,8 @@ export interface StoreConfig {
   meiosPagamento: string[];
   /** Limite das imagens de referência; `null` enquanto não definido (não valida o tamanho). */
   referenciaMaxMB: number | null;
+  /** Prazo de produção exibido na sacola (cada produto tem o seu na página dele). */
+  prazoProducaoPadrao: string;
   /** Texto do acordeão "Prazos, entrega e trocas". */
   politicaEntrega: string;
   /** `null` esconde o banner. */

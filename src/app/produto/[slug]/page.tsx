@@ -9,7 +9,7 @@ import { ProductForm } from "@/components/product/ProductForm";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { Accordion } from "@/components/ui/Accordion";
 import { Badge } from "@/components/ui/Badge";
-import { cartCount, categories, getProduct, getRelatedProducts, helpLinks, products, store } from "@/data/mock";
+import { categories, getProduct, getRelatedProducts, helpLinks, products, store } from "@/data/mock";
 import { formatPrice } from "@/lib/format";
 
 interface PageProps {
@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <>
-      <Header cartCount={cartCount} categories={categories} />
+      <Header categories={categories} />
 
       <main className="container-page pt-6 pb-32 md:pb-20">
         <Breadcrumb
