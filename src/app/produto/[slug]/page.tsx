@@ -7,6 +7,7 @@ import { Breadcrumb } from "@/components/product/Breadcrumb";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductForm } from "@/components/product/ProductForm";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductJsonLd } from "@/components/product/ProductJsonLd";
 import { Accordion } from "@/components/ui/Accordion";
 import { Badge } from "@/components/ui/Badge";
 import { categories, getProduct, getRelatedProducts, helpLinks, products, store } from "@/data/mock";
@@ -23,7 +24,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const product = getProduct((await params).slug);
   if (!product) return {};
-  return { title: product.nome, description: product.resumo };
+  const images = product.fotos.flatMap((f) => (f.src ? [{ url: f.src, alt: f.alt }] : []));
+  return {
+    title: product.nome,
+    description: product.resumo,
+    alternates: { canonical: `/produto/${product.slug}` },
+    openGraph: { title: product.nome, description: product.resumo, ...(images.length > 0 && { images }) },
+  };
 }
 
 export default async function ProductPage({ params }: PageProps) {
@@ -38,6 +45,7 @@ export default async function ProductPage({ params }: PageProps) {
   return (
     <>
       <Header categories={categories} />
+      <ProductJsonLd product={product} brand={store.nome} category={category} />
 
       <main className="container-page pt-6 pb-32 md:pb-20">
         <Breadcrumb

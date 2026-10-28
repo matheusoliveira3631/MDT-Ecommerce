@@ -20,7 +20,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const category = getCategory((await params).slug);
-  return category ? { title: category.nome } : {};
+  // Canônico sem ?ordem= para a ordenação não gerar páginas duplicadas
+  return category ? { title: category.nome, alternates: { canonical: `/categoria/${category.slug}` } } : {};
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
