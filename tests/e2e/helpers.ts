@@ -1,4 +1,7 @@
-import { expect, type Page } from "@playwright/test";
+import { createHmac } from "node:crypto";
+import Database from "better-sqlite3";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { TEST_DATA, TEST_WEBHOOK_SECRET } from "../../playwright.config";
 
 export const PRODUTO = "/produto/caixa-milk-personalizada";
 
@@ -37,4 +40,51 @@ export async function loginAs(page: Page, user: { email: string; senha: string }
   await page.getByLabel("Senha").fill(user.senha);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.waitForURL((url) => url.pathname === voltar);
+}
+
+/** Id da cobrança do pedido, lido direto do banco de testes (o gateway real mandaria no webhook). */
+export function chargeIdOf(numero: string): string {
+  const db = new Database(`${TEST_DATA}/loja.db`, { readonly: true });
+  try {
+    return (db.prepare("select pagamento_id from pedidos where numero = ?").get(numero) as { pagamento_id: string }).pagamento_id;
+  } finally {
+    db.close();
+  }
+}
+
+/** Simula o aviso assinado do gateway. */
+export function sendPaymentWebhook(request: APIRequestContext, numero: string, status: "aprovado" | "recusado" | "expirado", signature?: string) {
+  const body = JSON.stringify({ pagamentoId: chargeIdOf(numero), status });
+  return request.post("/api/pagamentos/webhook", {
+    data: body,
+    headers: {
+      "content-type": "application/json",
+      "x-assinatura": signature ?? createHmac("sha256", TEST_WEBHOOK_SECRET).update(body).digest("hex"),
+    },
+  });
+}
+
+/**
+ * Cada teste que compra se apresenta com um IP próprio (como o Nginx repassa em
+ * produção): o limite de 10 pedidos a cada 10 minutos por IP vale por cliente.
+ */
+export async function asNewVisitor(page: Page) {
+  const n = () => Math.floor(Math.random() * 254) + 1;
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": `10.${n()}.${n()}.${n()}` });
+}
+
+/** Cliente fecha um pedido no Pix; devolve o número e a URL da confirmação. */
+export async function placeOrder(page: Page, nome: string) {
+  await asNewVisitor(page);
+  await addToCart(page, nome);
+  await page.goto("/checkout/identificacao");
+  await fillIdentification(page);
+  await page.getByRole("button", { name: "Continuar para o pagamento" }).click();
+  await expect(page).toHaveURL(/\/checkout\/pagamento$/);
+  await page.getByText("Pix", { exact: true }).click();
+  await page.getByLabel(/Li e concordo/).check();
+  await page.getByRole("button", { name: "Finalizar pedido" }).click();
+  await expect(page).toHaveURL(/\/checkout\/confirmacao\?pedido=MT\d{5}&token=/);
+  const numero = (await page.getByRole("heading", { level: 1 }).textContent())!.match(/MT\d{5}/)![0];
+  return { numero, url: page.url() };
 }

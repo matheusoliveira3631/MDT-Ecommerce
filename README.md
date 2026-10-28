@@ -22,8 +22,8 @@ npm test                          # recria o banco de testes, gera o build, sobe
 npm run test:unit                 # só os testes unitários
 ```
 
-- `tests/unit`: formatação, preço digitado, slug, máscaras e CPF, totais (centavos, Pix, cupom), busca, ordenação e o fechamento do pedido no servidor (banco em memória: preço do banco, estoque, idempotência, falha do gateway, webhook).
-- `tests/e2e`: navegação, produto, sacola, checkout, favoritos, mobile (390px), painel admin (acesso, cadastro com fotos, exclusão) e acessibilidade (axe, WCAG 2.1 AA). Os testes usam um banco próprio em `data/test`, com um admin e uma cliente de teste.
+- `tests/unit`: formatação, preço digitado, slug, máscaras e CPF, totais (centavos, Pix, cupom), busca, ordenação o fechamento do pedido no servidor (banco em memória: preço do banco, estoque, idempotência, falha do gateway, webhook) e as regras de status do painel.
+- `tests/e2e`: navegação, produto, sacola, checkout, favoritos, mobile (390px), painel admin (acesso, cadastro com fotos, exclusão, pedidos do pagamento ao envio e cancelamento) e acessibilidade (axe, WCAG 2.1 AA). Os testes usam um banco próprio em `data/test`, com um admin e uma cliente de teste; cada compra simula um IP diferente, por causa do limite de pedidos por IP.
 
 ## Implantação no EC2
 
@@ -86,6 +86,14 @@ O navegador manda só intenções (produtos, quantidades, personalização, ende
 
 Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, rede instável). A confirmação (`/checkout/confirmacao?pedido=…&token=…`) é montada no servidor e exige o token do pedido. O gateway avisa o resultado em `POST /api/pagamentos/webhook`, assinado com `PAGAMENTO_WEBHOOK_SECRET`; aprovado libera a arte, recusado ou expirado cancela e devolve o estoque (uma vez só).
 
+### No painel (`/admin/pedidos`)
+
+Lista com filtro por status, busca por número, nome ou e-mail e um contador de pedidos pagos esperando arte no menu. No detalhe ficam os itens com toda a personalização, o contato da cliente (botão que abre o WhatsApp dela já com o número do pedido), a entrega e o histórico de quem mudou o quê.
+
+- O status só avança depois do pagamento confirmado: Pagamento confirmado → Arte enviada → Arte aprovada → Em produção → Enviado (com código de rastreio, que aparece para a cliente). Se marcar errado, é só escolher o status certo.
+- Cancelar pede um motivo e devolve o estoque. Se o pagamento já tinha sido aprovado, o reembolso é feito no gateway; se ele chegar depois do cancelamento, o pedido continua cancelado e o histórico avisa para reembolsar.
+- A cliente logada vê os pedidos dela em `/conta`.
+
 Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO` definido e com produtos que tenham preço: o servidor não cobra valor indefinido.
 
 ## Estrutura
@@ -95,7 +103,8 @@ Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO
 - `src/server/admin-catalog.ts`: escrita do catálogo, com validação (zod).
 - `src/server/auth.ts`: login, sessão (cookie httpOnly; no banco só o SHA-256 do token) e `requireAdmin`/`requireAdminPage`.
 - `src/server/storage.ts`: fotos no S3 (URL pré-assinada) ou numa pasta local, servida por `/arquivos/...`.
-- `src/app/admin`: painel (produtos e categorias). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
+- `src/server/admin-orders.ts`: pedidos no painel (lista, detalhe, regras de status e cancelamento).
+- `src/app/admin`: painel (pedidos, produtos e categorias). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
 - `src/app/api/produtos`: `GET /api/produtos?slugs=a,b`, dados públicos para sacola, checkout e favoritos (hook `useProducts`).
 - `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Great Vibes, Quicksand e Nunito via `next/font`.
 - `src/components`: `ui` (botões, campos, toast, gaveta), `layout`, `product`, `cart`, `checkout`, `favorites`, `admin`.

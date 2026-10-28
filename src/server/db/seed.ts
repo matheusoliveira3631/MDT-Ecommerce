@@ -80,6 +80,8 @@ export function applyTestPrices(db: Database) {
   for (const [slug, [base, pix]] of Object.entries(precos)) {
     db.update(produtos).set({ precoBaseCentavos: base, precoPixCentavos: pix, prazoProducaoDias: 5 }).where(eq(produtos.slug, slug)).run();
   }
+  // Os testes de ponta a ponta compram 20 caixas por pedido, várias vezes por execução
+  db.update(produtos).set({ estoque: 10_000 }).where(eq(produtos.slug, "caixa-milk-personalizada")).run();
 }
 
 export function seedCatalog(db: Database): { categorias: number; produtos: number } {

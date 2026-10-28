@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { TEST_USERS } from "../../playwright.config";
-import { addToCart, loginAs } from "./helpers";
+import { addToCart, loginAs, placeOrder } from "./helpers";
 
 const PAGES = [
   "/",
@@ -41,9 +41,18 @@ test("WCAG 2.1 AA sem violações: sacola com itens e checkout", async ({ page }
 });
 
 test("WCAG 2.1 AA sem violações: conta e painel do admin", async ({ page }) => {
+  test.setTimeout(90_000);
   await loginAs(page, TEST_USERS.admin);
   expect(await scan(page), "/conta").toEqual([]);
-  for (const path of ["/admin/produtos", "/admin/produtos/novo", "/admin/categorias", "/admin/produtos/1"]) {
+  const { numero } = await placeOrder(page, "Alice");
+  for (const path of [
+    "/admin/pedidos",
+    `/admin/pedidos/${numero}`,
+    "/admin/produtos",
+    "/admin/produtos/novo",
+    "/admin/categorias",
+    "/admin/produtos/1",
+  ]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(await scan(page), path).toEqual([]);

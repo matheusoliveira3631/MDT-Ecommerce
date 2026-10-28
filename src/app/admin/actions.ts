@@ -1,6 +1,9 @@
 "use server";
 
-import { AccessDeniedError, requireAdmin } from "@/server/auth";
+import { revalidatePath } from "next/cache";
+import { cancelOrderAdmin, updateOrderStatus, type OrderActionResult } from "@/server/admin-orders";
+import { AccessDeniedError, requireAdmin, type SessionUser } from "@/server/auth";
+import { db } from "@/server/db";
 import {
   deleteCategory,
   deleteProduct,
@@ -17,10 +20,10 @@ import { createUpload, type UploadTicket } from "@/server/storage";
 
 type ActionError = { ok: false; errors: Record<string, string> };
 
-async function guarded<T>(fn: () => Promise<T>): Promise<T | ActionError> {
+async function guarded<T>(fn: (user: SessionUser) => Promise<T>): Promise<T | ActionError> {
   try {
-    await requireAdmin();
-    return await fn();
+    const user = await requireAdmin();
+    return await fn(user);
   } catch (error) {
     if (error instanceof AccessDeniedError) return { ok: false, errors: { form: "Sua sessão expirou. Entre de novo." } };
     console.error(error);
@@ -60,4 +63,22 @@ export async function requestUploadAction(input: {
     if (input.pasta !== "produtos" && input.pasta !== "categorias") throw new Error("Pasta inválida.");
     return { ok: true as const, ticket: await createUpload(input) };
   });
+}
+
+/** Avança (ou corrige) o status de um pedido pago; o histórico guarda quem mudou. */
+export async function updateOrderStatusAction(input: unknown): Promise<OrderActionResult> {
+  const result = await guarded(async (user) => updateOrderStatus(db, input, user.nome));
+  return orderResult(result);
+}
+
+/** Cancela o pedido e devolve o estoque (o reembolso, se houver, é feito no gateway). */
+export async function cancelOrderAction(input: unknown): Promise<OrderActionResult> {
+  const result = await guarded(async (user) => cancelOrderAdmin(db, input, user.nome));
+  return orderResult(result);
+}
+
+function orderResult(result: OrderActionResult | ActionError): OrderActionResult {
+  if ("errors" in result) return { ok: false, error: result.errors.form ?? "Não foi possível salvar." };
+  if (result.ok) revalidatePath("/admin", "layout");
+  return result;
 }

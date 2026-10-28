@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { addToCart, fillIdentification } from "./helpers";
+import { TEST_USERS } from "../../playwright.config";
+import { addToCart, fillIdentification, loginAs, placeOrder } from "./helpers";
 
 const PAGES = [
   "/",
@@ -15,6 +16,17 @@ const PAGES = [
 
 test("nenhuma página rola na horizontal a 390px", async ({ page }) => {
   for (const path of PAGES) {
+    await page.goto(path);
+    const width = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(width, path).toBeLessThanOrEqual(390);
+  }
+});
+
+test("painel de pedidos cabe no celular (a tabela rola dentro do cartão)", async ({ page }) => {
+  test.setTimeout(90_000);
+  await loginAs(page, TEST_USERS.admin);
+  const { numero } = await placeOrder(page, "Nina");
+  for (const path of ["/admin/pedidos", `/admin/pedidos/${numero}`, "/conta"]) {
     await page.goto(path);
     const width = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(width, path).toBeLessThanOrEqual(390);

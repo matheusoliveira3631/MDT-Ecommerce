@@ -1,18 +1,5 @@
-import { createHmac } from "node:crypto";
-import Database from "better-sqlite3";
 import { expect, test } from "@playwright/test";
-import { TEST_DATA, TEST_WEBHOOK_SECRET } from "../../playwright.config";
-import { addToCart, cartLabel, fillIdentification } from "./helpers";
-
-/** Id da cobrança do pedido, lido direto do banco de testes (o gateway real mandaria no webhook). */
-function chargeIdOf(numero: string): string {
-  const db = new Database(`${TEST_DATA}/loja.db`, { readonly: true });
-  try {
-    return (db.prepare("select pagamento_id from pedidos where numero = ?").get(numero) as { pagamento_id: string }).pagamento_id;
-  } finally {
-    db.close();
-  }
-}
+import { addToCart, asNewVisitor, cartLabel, fillIdentification, sendPaymentWebhook } from "./helpers";
 
 test("sem itens, o checkout volta para a sacola", async ({ page }) => {
   await page.goto("/checkout/pagamento");
@@ -21,6 +8,7 @@ test("sem itens, o checkout volta para a sacola", async ({ page }) => {
 
 test("compra completa: identificação, pagamento e confirmação", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await asNewVisitor(page);
   await addToCart(page, "Helena");
 
   await page.goto("/checkout/pagamento");
@@ -66,12 +54,8 @@ test("compra completa: identificação, pagamento e confirmação", async ({ pag
   expect((await page.request.get(`/checkout/confirmacao?pedido=${numero}&token=errado`)).status()).toBe(404);
 
   // Webhook do gateway: assinatura inválida é recusada; a válida confirma o pagamento
-  const body = JSON.stringify({ pagamentoId: chargeIdOf(numero), status: "aprovado" });
-  const bad = await page.request.post("/api/pagamentos/webhook", { data: body, headers: { "content-type": "application/json", "x-assinatura": "00" } });
-  expect(bad.status()).toBe(401);
-  const signature = createHmac("sha256", TEST_WEBHOOK_SECRET).update(body).digest("hex");
-  const ok = await page.request.post("/api/pagamentos/webhook", { data: body, headers: { "content-type": "application/json", "x-assinatura": signature } });
-  expect(ok.status()).toBe(200);
+  expect((await sendPaymentWebhook(page.request, numero, "aprovado", "00")).status()).toBe(401);
+  expect((await sendPaymentWebhook(page.request, numero, "aprovado")).status()).toBe(200);
 
   await page.reload();
   await expect(heading).toHaveText(/^Pedido MT\d{5} recebido$/);

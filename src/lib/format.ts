@@ -80,3 +80,11 @@ export function pluralItens(count: number): string {
 export function cn(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(" ");
 }
+
+const dateTime = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
+
+/** "28/10/2026, 14:05" no horário de Brasília (o servidor roda em UTC). */
+export function formatDateTime(date: Date | string): string {
+  return dateTime.format(typeof date === "string" ? new Date(date) : date);
+}
+

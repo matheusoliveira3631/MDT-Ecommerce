@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { logout } from "@/app/entrar/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { countOrdersByStatus } from "@/server/admin-orders";
 import { requireAdminPage } from "@/server/auth";
+import { db } from "@/server/db";
 
 export const metadata: Metadata = {
   title: { default: "Painel", template: "%s · Painel" },
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Checagem de verdade (o middleware só barra quem não tem cookie)
   const user = await requireAdminPage("/admin");
+  const pendentes = countOrdersByStatus(db).aguardando_arte;
 
   return (
     <div className="min-h-screen bg-rose-50">
@@ -35,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </form>
           </div>
         </div>
-        <AdminNav />
+        <AdminNav pendentes={pendentes} />
       </header>
       <main className="mx-auto max-w-[1240px] px-4 py-8 md:px-6">{children}</main>
     </div>

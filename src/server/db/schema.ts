@@ -134,6 +134,8 @@ export const pedidos = sqliteTable(
     pagamentoId: text("pagamento_id").unique(),
     /** Dados para pagar (Pix copia e cola, linha do boleto...), vindos do gateway. */
     pagamentoInstrucoes: text("pagamento_instrucoes", { mode: "json" }).$type<Record<string, string>>(),
+    /** Código de rastreio dos Correios, preenchido no painel ao despachar. */
+    codigoRastreio: text("codigo_rastreio"),
     /** O estoque já foi devolvido (pedido cancelado): evita devolver duas vezes. */
     estoqueDevolvido: integer("estoque_devolvido", { mode: "boolean" }).notNull().default(false),
     criadoEm: criadoEm(),
@@ -162,7 +164,24 @@ export const pedidoItens = sqliteTable(
   (t) => [index("pedido_itens_pedido_idx").on(t.pedidoId)],
 );
 
+/** Cada mudança de status do pedido: quando, quem (loja, pagamento ou o nome de quem mexeu no painel) e por quê. */
+export const pedidoHistorico = sqliteTable(
+  "pedido_historico",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    pedidoId: integer("pedido_id")
+      .notNull()
+      .references(() => pedidos.id, { onDelete: "cascade" }),
+    status: text("status", { enum: STATUS_PEDIDO }).notNull(),
+    autor: text("autor").notNull(),
+    nota: text("nota"),
+    criadoEm: criadoEm(),
+  },
+  (t) => [index("pedido_historico_pedido_idx").on(t.pedidoId)],
+);
+
 export type PedidoRow = typeof pedidos.$inferSelect;
+export type PedidoHistoricoRow = typeof pedidoHistorico.$inferSelect;
 export type PedidoItemRow = typeof pedidoItens.$inferSelect;
 export type CategoriaRow = typeof categorias.$inferSelect;
 export type ProdutoRow = typeof produtos.$inferSelect;

@@ -50,7 +50,14 @@ export interface OrderView {
   descontoCentavos: number;
   cupom: string | null;
   totalCentavos: number;
+  /** Código de rastreio, quando o pedido já foi enviado. */
+  rastreio: string | null;
 }
+
+export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  ...(Object.fromEntries(ORDER_STATUS.map((s) => [s.value, s.label])) as Record<(typeof ORDER_STATUS)[number]["value"], string>),
+  cancelado: "Cancelado",
+};
 
 export const UFS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",

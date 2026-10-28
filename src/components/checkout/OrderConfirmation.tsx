@@ -15,10 +15,14 @@ function PaymentInstructions({ order }: { order: OrderView }) {
   const [copyStatus, setCopyStatus] = useState<string>();
   const { metodo, status, instrucoes } = order.pagamento;
 
-  if (status === "aprovado") return <p className="m-0 text-body">Pagamento confirmado. Obrigada!</p>;
-  if (status === "recusado" || status === "expirado") {
-    return <p className="m-0 text-body font-bold text-error">O pagamento não foi concluído e o pedido foi cancelado.</p>;
+  if (order.status === "cancelado") {
+    return (
+      <p className="m-0 text-body font-bold text-error">
+        Este pedido foi cancelado.{status === "aprovado" ? " O valor pago é devolvido pela mesma forma de pagamento." : ""}
+      </p>
+    );
   }
+  if (status === "aprovado") return <p className="m-0 text-body">Pagamento confirmado. Obrigada!</p>;
 
   if (metodo === "cartao") {
     return <p className="m-0 text-body">Pagamento no cartão em análise. Você recebe a confirmação por e-mail.</p>;
@@ -134,6 +138,14 @@ export function OrderConfirmation({ order, whatsapp }: { order: OrderView; whats
                   <span className="flex flex-col pt-1">
                     <strong className={cn("text-body", !current && !done && "text-ink-muted")}>{status.label}</strong>
                     <span className="text-sm text-ink-muted">{status.text}</span>
+                    {status.value === "enviado" && order.rastreio && (
+                      <span className="text-sm">
+                        Código de rastreio: <strong>{order.rastreio}</strong>{" "}
+                        <a href="https://rastreamento.correios.com.br/" target="_blank" rel="noopener noreferrer">
+                          (acompanhe nos Correios)
+                        </a>
+                      </span>
+                    )}
                   </span>
                 </li>
               );
