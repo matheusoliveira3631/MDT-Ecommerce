@@ -4,8 +4,21 @@ Next.js (App Router) + TypeScript + Tailwind CSS v4, a partir do handoff de desi
 
 ```bash
 npm install
-npm run dev   # http://localhost:3000/componentes
+npm run dev        # http://localhost:3000
 ```
+
+Copie `.env.example` para `.env.local` e ajuste `NEXT_PUBLIC_SITE_URL` (usado no sitemap, no Open Graph e nos dados estruturados).
+
+## Testes
+
+```bash
+npx playwright install chromium   # só na primeira vez, numa máquina nova
+npm test                          # gera o build, sobe o servidor e roda tudo
+npm run test:unit                 # só os testes unitários
+```
+
+- `tests/unit`: formatação, máscaras e CPF, totais da sacola, busca e ordenação.
+- `tests/e2e`: navegação, produto, sacola, checkout, favoritos, mobile (390px) e acessibilidade (axe, WCAG 2.1 AA) nas páginas principais.
 
 ## Estrutura
 

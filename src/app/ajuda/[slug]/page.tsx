@@ -12,8 +12,6 @@ interface PageProps {
 
 const pages = helpPages(store);
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return pages.map((p) => ({ slug: p.slug }));
 }
