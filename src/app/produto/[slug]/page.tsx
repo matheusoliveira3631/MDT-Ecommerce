@@ -10,19 +10,16 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductJsonLd } from "@/components/product/ProductJsonLd";
 import { Accordion } from "@/components/ui/Accordion";
 import { Badge } from "@/components/ui/Badge";
-import { categories, getProduct, getRelatedProducts, helpLinks, products, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias, obterProduto, produtosRelacionados } from "@/server/catalog";
 import { formatPrice } from "@/lib/format";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const product = getProduct((await params).slug);
+  const product = await obterProduto((await params).slug);
   if (!product) return {};
   const images = product.fotos.flatMap((f) => (f.src ? [{ url: f.src, alt: f.alt }] : []));
   return {
@@ -34,11 +31,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ProductPage({ params }: PageProps) {
-  const product = getProduct((await params).slug);
+  const [product, categories] = await Promise.all([obterProduto((await params).slug), listarCategorias()]);
   if (!product) notFound();
 
-  const category = categories.find((c) => c.nome === product.categoria);
-  const related = getRelatedProducts(product.slug);
+  const category = categories.find((c) => c.slug === product.categoriaSlug);
+  const related = await produtosRelacionados(product);
   const soldOut = !product.ativo || product.estoque <= 0;
   const selo = soldOut ? { tipo: "soldout" as const } : product.selos[0];
 
@@ -57,7 +54,7 @@ export default async function ProductPage({ params }: PageProps) {
         />
 
         <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
-          <ProductGallery photos={product.fotos} />
+          <ProductGallery photos={product.fotos} productName={product.nome} />
 
           <div className="flex min-w-0 flex-col gap-6">
             <div className="flex flex-col items-start gap-2.5">

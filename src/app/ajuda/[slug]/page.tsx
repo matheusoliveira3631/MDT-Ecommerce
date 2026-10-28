@@ -4,7 +4,8 @@ import { ContentArticle } from "@/components/content/ContentArticle";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { helpPages } from "@/data/content";
-import { categories, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias } from "@/server/catalog";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function HelpPage({ params }: PageProps) {
+  const categories = await listarCategorias();
   const { slug } = await params;
   const page = pages.find((p) => p.slug === slug);
   if (!page) notFound();

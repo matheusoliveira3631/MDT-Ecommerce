@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/Button";
+import { useProducts } from "@/components/catalog/useProducts";
 import { Drawer } from "@/components/ui/Drawer";
 import { CloseIcon } from "@/components/ui/icons";
 import { Photo } from "@/components/ui/Photo";
-import { getProduct } from "@/data/mock";
 import { cartTotals, lineTotal, themeLabel } from "@/lib/cart";
 import { formatPrice, pluralItens } from "@/lib/format";
 import { useCart } from "./CartProvider";
@@ -13,7 +13,8 @@ import { useCart } from "./CartProvider";
 /** Sacola lateral: abre pela direita ao adicionar um item (desktop). */
 export function CartDrawer() {
   const { lines, drawerOpen, closeDrawer } = useCart();
-  const totals = cartTotals(lines, getProduct);
+  const catalog = useProducts(lines.map((l) => l.produtoSlug));
+  const totals = cartTotals(lines, catalog.get);
 
   return (
     <Drawer open={drawerOpen} onClose={closeDrawer} labelledBy="sacola-lateral-title" className="max-w-[420px]">
@@ -35,7 +36,7 @@ export function CartDrawer() {
 
       <ul className="m-0 flex flex-1 list-none flex-col gap-[18px] overflow-y-auto px-6 py-[18px]">
         {lines.map((line) => {
-          const product = getProduct(line.produtoSlug);
+          const product = catalog.get(line.produtoSlug);
           return (
             <li key={line.id} className="flex gap-3.5">
               <Photo

@@ -3,7 +3,8 @@ import { ContentArticle } from "@/components/content/ContentArticle";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { legalPages } from "@/data/content";
-import { categories, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias } from "@/server/catalog";
 
 const page = legalPages(store).find((p) => p.slug === "privacidade")!;
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
   description: page.resumo,
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const categories = await listarCategorias();
   return (
     <>
       <Header categories={categories} />

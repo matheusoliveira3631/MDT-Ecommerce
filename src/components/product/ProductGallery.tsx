@@ -7,12 +7,24 @@ import { cn } from "@/lib/format";
 import type { ProductPhoto } from "@/lib/types";
 
 /** Foto principal 1:1 e miniaturas; a miniatura escolhida troca a foto sem recarregar. */
-export function ProductGallery({ photos }: { photos: ProductPhoto[] }) {
+export function ProductGallery({ photos, productName }: { photos: ProductPhoto[]; productName: string }) {
   const [current, setCurrent] = useState(0);
   const main = photos[current];
 
   if (!main) {
-    return <Photo alt="" sizes="(min-width: 1024px) 590px, 100vw" className="aspect-square rounded-xl" />;
+    return (
+      <Photo
+        alt={`${productName}: foto em breve`}
+        sizes="(min-width: 1024px) 590px, 100vw"
+        className="aspect-square rounded-xl"
+        placeholder={
+          <>
+            <ImageIcon size={40} strokeWidth={1.4} />
+            <span className="text-[15px]">Foto em breve</span>
+          </>
+        }
+      />
+    );
   }
 
   return (

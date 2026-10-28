@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { buttonClasses } from "@/components/ui/Button";
 import { ChatIcon, CheckIcon } from "@/components/ui/icons";
-import { getProduct } from "@/data/mock";
+import { useProducts } from "@/components/catalog/useProducts";
 import { themeLabel } from "@/lib/cart";
 import { ORDER_STATUS, PAYMENT_LABELS, type Order } from "@/lib/checkout";
 import { cn, formatPrice } from "@/lib/format";
@@ -88,6 +88,7 @@ function PaymentInstructions({ order }: { order: Order }) {
 export function OrderConfirmation({ whatsapp }: { whatsapp: string }) {
   const router = useRouter();
   const { order, hydrated } = useCheckout();
+  const catalog = useProducts(order?.linhas.map((l) => l.produtoSlug) ?? []);
 
   useEffect(() => {
     if (hydrated && !order) router.replace("/");
@@ -160,7 +161,7 @@ export function OrderConfirmation({ whatsapp }: { whatsapp: string }) {
           {order.linhas.map((line) => (
             <li key={line.id} className="flex justify-between gap-3">
               <span>
-                {getProduct(line.produtoSlug)?.nome ?? line.produtoSlug}
+                {catalog.get(line.produtoSlug)?.nome ?? line.produtoSlug}
                 <span className="text-ink-muted">
                   {" "}
                   · {themeLabel(line.personalizacao)} · {line.personalizacao.nome}

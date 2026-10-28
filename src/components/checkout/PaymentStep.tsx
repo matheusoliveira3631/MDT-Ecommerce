@@ -6,7 +6,8 @@ import { useState, type ReactNode } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
 import { CardIcon, LockIcon } from "@/components/ui/icons";
-import { createOrderMock, getProduct } from "@/data/mock";
+import { createOrderMock } from "@/data/mock";
+import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
 import { PAYMENT_LABELS, type PaymentMethod } from "@/lib/checkout";
 import { cn, formatPrice } from "@/lib/format";
@@ -38,6 +39,7 @@ function ReviewCard({ title, children }: { title: string; children: ReactNode })
 function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps & { onPlacing: (v: boolean) => void }) {
   const router = useRouter();
   const { lines, coupon, clearCart } = useCart();
+  const catalog = useProducts(lines.map((l) => l.produtoSlug));
   const { cliente, endereco, frete, completeOrder } = useCheckout();
   const [method, setMethod] = useState<PaymentMethod>("pix");
   const [accepted, setAccepted] = useState(false);
@@ -46,7 +48,7 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
 
   // CheckoutGate garante que os três existem
   if (!cliente || !endereco || !frete) return null;
-  const totals = orderTotals(lines, getProduct, frete, coupon);
+  const totals = orderTotals(lines, catalog.get, frete, coupon);
 
   const methods: Array<{ value: PaymentMethod; detail: ReactNode }> = [
     {

@@ -4,14 +4,15 @@ import Link from "next/link";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { buttonClasses } from "@/components/ui/Button";
 import { HeartIcon } from "@/components/ui/icons";
-import { getProduct } from "@/data/mock";
+import { useProducts } from "@/components/catalog/useProducts";
 import type { Product } from "@/lib/types";
 import { useFavorites } from "./FavoritesProvider";
 
 export function FavoritesView() {
   const { slugs, hydrated } = useFavorites();
+  const catalog = useProducts(slugs);
 
-  if (!hydrated) {
+  if (!hydrated || !catalog.ready) {
     return (
       <div aria-busy="true" aria-label="Carregando favoritos" className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] md:gap-grid">
         {[0, 1, 2, 3].map((i) => (
@@ -25,7 +26,7 @@ export function FavoritesView() {
     );
   }
 
-  const products = slugs.map(getProduct).filter((p): p is Product => p != null);
+  const products = slugs.map(catalog.get).filter((p): p is Product => p != null);
 
   if (products.length === 0) {
     return (

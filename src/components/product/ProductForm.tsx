@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { ColorSwatches } from "@/components/ui/ColorSwatches";
@@ -44,15 +44,6 @@ function Legend({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
  * a linha da sacola em vez de adicionar outra.
  */
 export function ProductForm(props: ProductFormProps) {
-  // useSearchParams precisa de Suspense para a página continuar estática
-  return (
-    <Suspense fallback={<ProductFormFields {...props} />}>
-      <EditAwareForm {...props} />
-    </Suspense>
-  );
-}
-
-function EditAwareForm(props: ProductFormProps) {
   const editId = useSearchParams().get("editar");
   const { lines } = useCart();
   const editLine = lines.find((l) => l.id === editId && l.produtoSlug === props.product.slug);
@@ -236,7 +227,7 @@ function ProductFormFields({
             <PencilIcon />
           </span>
           <span className="text-sm leading-normal">
-            <strong className="block text-body">Produção em {product.prazoProducaoDias} dias úteis</strong>
+            <strong className="block text-body">Produção em {product.prazoProducaoDias ?? "[X]"} dias úteis</strong>
             <span className="text-ink-muted">contados a partir da aprovação da arte</span>
           </span>
         </div>

@@ -5,9 +5,9 @@ test.beforeEach(async ({ page }) => {
   await page.goto(PRODUTO);
 });
 
-test("galeria troca a foto e a quantidade começa no pedido mínimo", async ({ page }) => {
-  await page.getByRole("button", { name: "Ver foto 3" }).click();
-  await expect(page.getByRole("button", { name: "Ver foto 3" })).toHaveAttribute("aria-pressed", "true");
+test("sem fotos, a galeria mostra o placeholder; a quantidade começa no pedido mínimo", async ({ page }) => {
+  await expect(page.getByRole("img", { name: "Caixa milk personalizada: foto em breve" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Ver foto/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Diminuir quantidade" })).toBeDisabled();
   await expect(page.locator("form [aria-live=polite]").first()).toHaveText("20");
 });

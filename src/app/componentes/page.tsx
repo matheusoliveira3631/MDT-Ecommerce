@@ -8,7 +8,8 @@ import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { categories, helpLinks, products, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias, listarProdutos } from "@/server/catalog";
 import { FieldsDemo, LoadingButtonDemo, ProductGridDemo, StepperDemo } from "./demos";
 
 export const metadata: Metadata = {
@@ -28,7 +29,8 @@ function Section({ title, description, children }: { title: string; description?
   );
 }
 
-export default function ComponentesPage() {
+export default async function ComponentesPage() {
+  const [categories, products] = await Promise.all([listarCategorias(), listarProdutos()]);
   return (
     <>
       <Header categories={categories} />
@@ -107,8 +109,9 @@ export default function ComponentesPage() {
 
               <Section title="Card de produto · compact" description="Usado em produtos relacionados.">
                 <div className="grid grid-cols-2 gap-5">
-                  <ProductCard product={products[0]} variant="compact" />
-                  <ProductCard product={products[4]} variant="compact" />
+                  {products.slice(0, 2).map((p) => (
+                    <ProductCard key={p.slug} product={p} variant="compact" />
+                  ))}
                 </div>
               </Section>
 

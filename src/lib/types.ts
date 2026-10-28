@@ -14,9 +14,12 @@ export interface ProductColor {
 }
 
 export interface Product {
+  id: number;
   slug: string;
   nome: string;
+  /** Nome da categoria. */
   categoria: string;
+  categoriaSlug: string;
   /** Texto curto abaixo do título. */
   resumo: string;
   /** Texto completo do acordeão "Descrição". */
@@ -30,18 +33,23 @@ export interface Product {
   /** Mostra "a partir de" quando o preço varia por quantidade ou opção. */
   precoVaria: boolean;
   pedidoMinimo: number;
-  prazoProducaoDias: number | string;
+  /** `null` enquanto não cadastrado (aparece como "[X]"). */
+  prazoProducaoDias: number | null;
   temas: string[];
   cores: ProductColor[];
   aceitaReferencia: boolean;
   selos: ProductBadge[];
   estoque: number;
   ativo: boolean;
+  /** Aparece na vitrine "Mais vendidos" da página inicial. */
+  destaque: boolean;
 }
 
 export interface ProductPhoto {
   src?: string;
   alt: string;
+  /** Chave no armazenamento (para o admin reordenar e remover). */
+  chave?: string;
 }
 
 export interface ShippingOption {

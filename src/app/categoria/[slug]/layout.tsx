@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getCategory } from "@/data/mock";
+import { obterCategoria } from "@/server/catalog";
 
 /**
  * Valida a categoria antes do loading.tsx: um notFound() dentro da página só
@@ -12,6 +12,6 @@ export default async function CategoryLayout({
   children: React.ReactNode;
   params: Promise<{ slug: string }>;
 }) {
-  if (!getCategory((await params).slug)) notFound();
+  if (!(await obterCategoria((await params).slug))) notFound();
   return children;
 }

@@ -11,17 +11,11 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import {
-  categories,
-  featuredProducts,
-  helpLinks,
-  instagramPosts,
-  steps,
-  store,
-  testimonials,
-} from "@/data/mock";
+import { helpLinks, instagramPosts, steps, store, testimonials } from "@/data/mock";
+import { listarCategorias, produtosEmDestaque } from "@/server/catalog";
 
-export default function Home() {
+export default async function Home() {
+  const [categories, featuredProducts] = await Promise.all([listarCategorias(), produtosEmDestaque(4)]);
   return (
     <>
       <AnnouncementBar message={store.avisoBarra} />

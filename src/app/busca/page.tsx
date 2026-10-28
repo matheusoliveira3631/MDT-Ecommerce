@@ -3,7 +3,8 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { LostState } from "@/components/layout/LostState";
 import { ProductListing } from "@/components/product/ProductListing";
-import { categories, helpLinks, products, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias, listarProdutos } from "@/server/catalog";
 import { parseSort, searchProducts, sortProducts } from "@/lib/catalog";
 
 interface PageProps {
@@ -21,6 +22,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const q = first(params.q).trim();
   const sort = parseSort(params.ordem);
+  const [categories, products] = await Promise.all([listarCategorias(), listarProdutos()]);
   const results = sortProducts(searchProducts(products, q), sort);
 
   return (

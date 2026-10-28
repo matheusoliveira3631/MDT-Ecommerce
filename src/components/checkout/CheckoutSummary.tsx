@@ -3,7 +3,7 @@
 import { useCart } from "@/components/cart/CartProvider";
 import { TotalsList } from "@/components/cart/OrderSummary";
 import { Photo } from "@/components/ui/Photo";
-import { getProduct } from "@/data/mock";
+import { useProducts } from "@/components/catalog/useProducts";
 import { lineTotal, orderTotals, themeLabel } from "@/lib/cart";
 import { formatPrice, pluralItens } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
@@ -11,7 +11,8 @@ import type { ShippingOption } from "@/lib/types";
 /** Resumo do checkout: itens em lista compacta + totais. Fixo à direita no desktop. */
 export function CheckoutSummary({ shipping, parcelas }: { shipping: ShippingOption | null; parcelas: string }) {
   const { lines, coupon } = useCart();
-  const totals = orderTotals(lines, getProduct, shipping, coupon);
+  const catalog = useProducts(lines.map((l) => l.produtoSlug));
+  const totals = orderTotals(lines, catalog.get, shipping, coupon);
 
   return (
     <aside aria-labelledby="resumo-checkout-title" className="flex flex-col gap-[18px] rounded-lg bg-white p-6 md:p-7 lg:sticky lg:top-6">
@@ -21,7 +22,7 @@ export function CheckoutSummary({ shipping, parcelas }: { shipping: ShippingOpti
       </h2>
       <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
         {lines.map((line) => {
-          const product = getProduct(line.produtoSlug);
+          const product = catalog.get(line.produtoSlug);
           return (
             <li key={line.id} className="flex gap-3">
               <Photo src={product?.fotos[0]?.src} alt="" sizes="56px" className="size-14 shrink-0 rounded-sm" />

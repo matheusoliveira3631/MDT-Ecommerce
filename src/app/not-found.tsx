@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { LostState } from "@/components/layout/LostState";
-import { categories, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias } from "@/server/catalog";
 
 export const metadata: Metadata = {
   title: "Página não encontrada",
 };
 
-export default function NotFound() {
+export default async function NotFound() {
+  const categories = await listarCategorias();
   return (
     <>
       <Header categories={categories} />

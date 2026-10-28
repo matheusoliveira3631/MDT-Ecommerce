@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.PORT ?? 3200);
 const baseURL = `http://localhost:${PORT}`;
+export const TEST_DATA = "./data/test";
 
 /**
  * Testes unitários (sem navegador) e ponta a ponta no build de produção.
@@ -35,9 +36,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run build && npm run start -- --port ${PORT}`,
+    // Banco e uploads só dos testes, recriados a cada execução a partir do catálogo inicial
+    command: `rm -rf ${TEST_DATA} && npm run db:seed && npm run build && npm run start -- --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    env: {
+      DATABASE_PATH: `${TEST_DATA}/loja.db`,
+      UPLOADS_DIR: `${TEST_DATA}/uploads`,
+      // Sem S3 nos testes: as fotos vão para a pasta local
+      S3_BUCKET: "",
+    },
   },
 });

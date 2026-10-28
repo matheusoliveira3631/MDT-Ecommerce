@@ -3,13 +3,15 @@ import { CategoryTile } from "@/components/category/CategoryTile";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Breadcrumb } from "@/components/product/Breadcrumb";
-import { categories, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias } from "@/server/catalog";
 
 export const metadata: Metadata = {
   title: "Categorias",
 };
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categories = await listarCategorias();
   return (
     <>
       <Header categories={categories} />

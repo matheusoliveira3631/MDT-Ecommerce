@@ -4,14 +4,16 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Breadcrumb } from "@/components/product/Breadcrumb";
 import { helpPages } from "@/data/content";
-import { categories, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias } from "@/server/catalog";
 
 export const metadata: Metadata = {
   title: "Ajuda",
   description: "Prazos, frete, trocas e perguntas frequentes.",
 };
 
-export default function HelpIndexPage() {
+export default async function HelpIndexPage() {
+  const categories = await listarCategorias();
   const pages = helpPages(store);
   return (
     <>

@@ -6,7 +6,8 @@ import { Header } from "@/components/layout/Header";
 import { Breadcrumb } from "@/components/product/Breadcrumb";
 import { ProductListing } from "@/components/product/ProductListing";
 import { buttonClasses } from "@/components/ui/Button";
-import { categories, getCategory, getCategoryProducts, helpLinks, store } from "@/data/mock";
+import { helpLinks, store } from "@/data/mock";
+import { listarCategorias, obterCategoria, produtosDaCategoria } from "@/server/catalog";
 import { parseSort, sortProducts } from "@/lib/catalog";
 
 interface PageProps {
@@ -14,23 +15,23 @@ interface PageProps {
   searchParams: Promise<{ ordem?: string | string[] }>;
 }
 
-export function generateStaticParams() {
-  return categories.map((c) => ({ slug: c.slug }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const category = getCategory((await params).slug);
+  const category = await obterCategoria((await params).slug);
   // Canônico sem ?ordem= para a ordenação não gerar páginas duplicadas
   return category ? { title: category.nome, alternates: { canonical: `/categoria/${category.slug}` } } : {};
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const category = getCategory(slug);
+  const [category, categories, categoryProducts] = await Promise.all([
+    obterCategoria(slug),
+    listarCategorias(),
+    produtosDaCategoria(slug),
+  ]);
   if (!category) notFound();
 
   const sort = parseSort((await searchParams).ordem);
-  const products = sortProducts(getCategoryProducts(slug), sort);
+  const products = sortProducts(categoryProducts, sort);
 
   return (
     <>

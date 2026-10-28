@@ -6,7 +6,8 @@ import { ShippingCalculator } from "@/components/product/ShippingCalculator";
 import { buttonClasses } from "@/components/ui/Button";
 import { BagIcon, ChatIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/ToastProvider";
-import { calculateShippingMock, getProduct, validateCouponMock } from "@/data/mock";
+import { calculateShippingMock, validateCouponMock } from "@/data/mock";
+import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
 import { pluralItens } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
@@ -70,9 +71,11 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
   const [shipping, setShipping] = useState<ShippingOption | null>(null);
   const showToast = useToast();
 
-  if (!hydrated) return <CartSkeleton />;
+  const catalog = useProducts(lines.map((l) => l.produtoSlug));
 
-  const totals = orderTotals(lines, getProduct, shipping, coupon);
+  if (!hydrated || !catalog.ready) return <CartSkeleton />;
+
+  const totals = orderTotals(lines, catalog.get, shipping, coupon);
 
 
   if (lines.length === 0) {
@@ -97,7 +100,7 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
               <li key={line.id}>
                 <CartLineItem
                   line={line}
-                  product={getProduct(line.produtoSlug)}
+                  product={catalog.get(line.produtoSlug)}
                   onQty={(quantidade) => updateLine(line.id, { quantidade })}
                   onRemove={() => {
                     const removed = removeLine(line.id);
