@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { useCart } from "@/components/cart/CartProvider";
-import { whatsappHref } from "@/components/layout/WhatsAppFab";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { ColorSwatches } from "@/components/ui/ColorSwatches";
 import { FileDrop } from "@/components/ui/FileDrop";
@@ -15,6 +14,7 @@ import { Toast } from "@/components/ui/Toast";
 import { calculateShippingMock } from "@/data/mock";
 import { OTHER_THEME, type CartLine, type Personalizacao } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
+import { whatsappHref } from "@/lib/whatsapp";
 import type { Product } from "@/lib/types";
 import { ShippingCalculator } from "./ShippingCalculator";
 

@@ -9,33 +9,46 @@ import { Logo } from "./Logo";
 const iconLink =
   "relative flex size-11 items-center justify-center rounded-pill text-ink transition-colors duration-150 ease-out hover:bg-rose-50 hover:text-primary";
 
-export function SearchBar({ defaultQuery, className }: { defaultQuery?: string; className?: string }) {
+export interface SearchBarProps {
+  defaultQuery?: string;
+  /** `header`: 48px sobre rose-50. `hero404`: 54px, branco, para a 404 e a busca vazia. */
+  variant?: "header" | "hero404";
+  className?: string;
+}
+
+/** Envia para `/busca?q=`. */
+export function SearchBar({ defaultQuery, variant = "header", className }: SearchBarProps) {
+  const hero = variant === "hero404";
+  const id = hero ? "busca-destaque" : "busca-header";
   return (
     <form
       role="search"
       action="/busca"
       method="get"
       className={cn(
-        "flex h-12 items-center gap-2.5 rounded-pill border border-rose-200 bg-rose-50 pr-2 pl-[18px]",
-        "focus-within:border-primary",
+        "flex items-center gap-2.5 rounded-pill border pr-2 focus-within:border-primary",
+        hero ? "h-[54px] border-rose-300 bg-white pl-5" : "h-12 border-rose-200 bg-rose-50 pl-[18px]",
         className,
       )}
     >
-      <label htmlFor="busca-header" className="sr-only">
+      <label htmlFor={id} className="sr-only">
         Buscar produtos
       </label>
       <input
-        id="busca-header"
+        id={id}
         name="q"
         type="search"
         defaultValue={defaultQuery}
-        placeholder="Buscar caixa milk, topo de bolo, cestas…"
+        placeholder={hero ? "O que você está procurando?" : "Buscar caixa milk, topo de bolo, cestas…"}
         className="min-w-0 flex-1 border-0 bg-transparent text-body text-ink outline-none placeholder:text-ink-muted"
       />
       <button
         type="submit"
         aria-label="Buscar"
-        className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-pill bg-primary text-white transition-colors duration-150 ease-out hover:bg-primary-hover"
+        className={cn(
+          "flex shrink-0 cursor-pointer items-center justify-center rounded-pill bg-primary text-white transition-colors duration-150 ease-out hover:bg-primary-hover",
+          hero ? "size-10" : "size-9",
+        )}
       >
         <SearchIcon size={18} />
       </button>
@@ -77,7 +90,7 @@ export function CheckoutSteps({ current }: { current: CheckoutStep }) {
 }
 
 export type HeaderProps =
-  | { variant?: "full"; categories: Category[]; checkoutStep?: never }
+  | { variant?: "full"; categories: Category[]; defaultQuery?: string; checkoutStep?: never }
   | { variant: "checkout"; checkoutStep: CheckoutStep; categories?: never };
 
 export function Header(props: HeaderProps) {
@@ -96,12 +109,12 @@ export function Header(props: HeaderProps) {
     );
   }
 
-  const { categories } = props;
+  const { categories, defaultQuery } = props;
   return (
     <header className="border-b border-border bg-white">
       <div className="container-page flex flex-wrap items-center gap-x-6 gap-y-3 py-[18px]">
         <Logo />
-        <SearchBar className="order-last basis-full md:order-none md:basis-[280px] md:flex-1" />
+        <SearchBar defaultQuery={defaultQuery} className="order-last basis-full md:order-none md:basis-[280px] md:flex-1" />
         <div className="ml-auto flex items-center gap-1.5 md:ml-0">
           <Link href="/conta" aria-label="Minha conta" className={iconLink}>
             <UserIcon />

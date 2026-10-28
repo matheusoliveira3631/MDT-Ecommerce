@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { ChatIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/format";
+import { whatsappHref } from "@/lib/whatsapp";
 
 export interface WhatsAppFabProps {
   /** Número com DDI e DDD; caracteres que não são dígitos são ignorados. */
@@ -14,11 +15,6 @@ export interface WhatsAppFabProps {
   position?: "fixed" | "inline";
 }
 
-export function whatsappHref(phone: string, message?: string) {
-  const digits = phone.replace(/\D/g, "");
-  const query = message ? `?text=${encodeURIComponent(message)}` : "";
-  return `https://wa.me/${digits}${query}`;
-}
 
 export function WhatsAppFab({
   phone,
