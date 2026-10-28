@@ -20,7 +20,7 @@ const line = (produtoSlug: string, quantidade: number, nome = "Helena"): CartLin
 });
 
 test("soma subtotal, frete e desconto", () => {
-  const totals = orderTotals([line("caixa", 20), line("topo", 1)], get, { servico: "PAC", prazo: "5", valor: 25 }, { desconto: 10 });
+  const totals = orderTotals([line("caixa", 20), line("topo", 1)], get, { servico: "PAC", prazo: "5", valor: 25 }, { codigo: "X", tipo: "fixo", valor: 1000 });
   expect(totals.itens).toBe(21);
   expect(totals.subtotal).toBe(140);
   expect(totals.total).toBe(155);
@@ -36,7 +36,6 @@ test("sem frete e sem cupom, só o subtotal conta", () => {
 
 test("preço ou desconto sem cadastro viram null (placeholder na tela)", () => {
   expect(orderTotals([line("caixa", 1), line("semPreco", 1)], get, null, null).total).toBeNull();
-  expect(orderTotals([line("caixa", 1)], get, null, { desconto: null }).total).toBeNull();
   expect(orderTotals([line("caixa", 1)], get, { servico: "PAC", prazo: "5", valor: null }, null).total).toBeNull();
 });
 

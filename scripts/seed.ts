@@ -4,10 +4,15 @@
  */
 import "./env";
 import { createDatabase } from "../src/server/db/connect";
-import { seedCatalog } from "../src/server/db/seed";
+import { applyTestPrices, seedCatalog } from "../src/server/db/seed";
 
 const file = process.env.DATABASE_PATH ?? "./data/loja.db";
-const result = seedCatalog(createDatabase(file));
+const db = createDatabase(file);
+const result = seedCatalog(db);
+if (process.argv.includes("--precos-de-teste")) {
+  applyTestPrices(db);
+  console.log("Preços de teste aplicados.");
+}
 console.log(
   result.categorias
     ? `Catálogo inicial importado em ${file}: ${result.categorias} categorias, ${result.produtos} produtos.`

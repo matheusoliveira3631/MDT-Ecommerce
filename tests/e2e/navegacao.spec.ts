@@ -68,5 +68,6 @@ test("SEO: robots, sitemap e dados estruturados do produto", async ({ page, requ
   await page.goto("/produto/caixa-milk-personalizada");
   const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? "[]");
   expect(jsonLd[0]["@type"]).toBe("Product");
-  expect(jsonLd[0].offers).toBeUndefined(); // sem preço cadastrado não há oferta
+  // O banco de testes tem preços: a oferta entra com o valor em reais
+  expect(jsonLd[0].offers).toMatchObject({ priceCurrency: "BRL", price: "5.50" });
 });

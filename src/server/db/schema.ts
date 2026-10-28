@@ -1,5 +1,7 @@
 import { sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { Address, PaymentMethod } from "@/lib/checkout";
+import type { Personalizacao } from "@/lib/cart";
 import type { ProductBadge, ProductColor } from "@/lib/types";
 
 const criadoEm = () =>
@@ -89,6 +91,79 @@ export const sessoes = sqliteTable(
   (t) => [index("sessoes_usuario_idx").on(t.usuarioId)],
 );
 
+export const STATUS_PEDIDO = [
+  "aguardando_pagamento",
+  "aguardando_arte",
+  "arte_enviada",
+  "aprovada",
+  "em_producao",
+  "enviado",
+  "cancelado",
+] as const;
+
+export const pedidos = sqliteTable(
+  "pedidos",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** Número mostrado à cliente, ex.: MT00042. */
+    numero: text("numero").notNull().unique(),
+    /** Segredo da URL de confirmação (quem não fez o pedido não vê os dados). */
+    tokenAcesso: text("token_acesso").notNull(),
+    /** Mesmo pedido enviado duas vezes (duplo clique, rede instável) não vira dois. */
+    chaveIdempotencia: text("chave_idempotencia").notNull().unique(),
+    status: text("status", { enum: STATUS_PEDIDO }).notNull().default("aguardando_pagamento"),
+    usuarioId: integer("usuario_id").references(() => usuarios.id, { onDelete: "set null" }),
+    clienteNome: text("cliente_nome").notNull(),
+    clienteEmail: text("cliente_email").notNull(),
+    clienteCpf: text("cliente_cpf").notNull(),
+    clienteWhatsapp: text("cliente_whatsapp").notNull(),
+    endereco: text("endereco", { mode: "json" }).$type<Address>().notNull(),
+    freteServico: text("frete_servico").notNull(),
+    fretePrazo: text("frete_prazo").notNull(),
+    freteCentavos: integer("frete_centavos").notNull(),
+    cupomCodigo: text("cupom_codigo"),
+    descontoCentavos: integer("desconto_centavos").notNull().default(0),
+    subtotalCentavos: integer("subtotal_centavos").notNull(),
+    /** O que foi cobrado (no Pix, com os preços do Pix). */
+    totalCentavos: integer("total_centavos").notNull(),
+    pagamentoMetodo: text("pagamento_metodo", { enum: ["pix", "cartao", "boleto"] }).$type<PaymentMethod>().notNull(),
+    pagamentoStatus: text("pagamento_status", { enum: ["pendente", "aprovado", "recusado", "expirado"] })
+      .notNull()
+      .default("pendente"),
+    /** Id da cobrança no gateway. */
+    pagamentoId: text("pagamento_id").unique(),
+    /** Dados para pagar (Pix copia e cola, linha do boleto...), vindos do gateway. */
+    pagamentoInstrucoes: text("pagamento_instrucoes", { mode: "json" }).$type<Record<string, string>>(),
+    /** O estoque já foi devolvido (pedido cancelado): evita devolver duas vezes. */
+    estoqueDevolvido: integer("estoque_devolvido", { mode: "boolean" }).notNull().default(false),
+    criadoEm: criadoEm(),
+    atualizadoEm: integer("atualizado_em", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (t) => [index("pedidos_status_idx").on(t.status)],
+);
+
+export const pedidoItens = sqliteTable(
+  "pedido_itens",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    pedidoId: integer("pedido_id")
+      .notNull()
+      .references(() => pedidos.id, { onDelete: "cascade" }),
+    /** Pode sumir se o produto for excluído; nome e preço ficam copiados abaixo. */
+    produtoId: integer("produto_id").references(() => produtos.id, { onDelete: "set null" }),
+    produtoSlug: text("produto_slug").notNull(),
+    produtoNome: text("produto_nome").notNull(),
+    precoUnitarioCentavos: integer("preco_unitario_centavos").notNull(),
+    quantidade: integer("quantidade").notNull(),
+    personalizacao: text("personalizacao", { mode: "json" }).$type<Personalizacao>().notNull(),
+  },
+  (t) => [index("pedido_itens_pedido_idx").on(t.pedidoId)],
+);
+
+export type PedidoRow = typeof pedidos.$inferSelect;
+export type PedidoItemRow = typeof pedidoItens.$inferSelect;
 export type CategoriaRow = typeof categorias.$inferSelect;
 export type ProdutoRow = typeof produtos.$inferSelect;
 export type ProdutoFotoRow = typeof produtoFotos.$inferSelect;

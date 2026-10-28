@@ -6,7 +6,7 @@ import { ShippingCalculator } from "@/components/product/ShippingCalculator";
 import { buttonClasses } from "@/components/ui/Button";
 import { BagIcon, ChatIcon } from "@/components/ui/icons";
 import { useToast } from "@/components/ui/ToastProvider";
-import { calculateShippingMock, validateCouponMock } from "@/data/mock";
+import { quoteShippingAction, validateCouponAction } from "@/app/actions/loja";
 import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
 import { pluralItens } from "@/lib/format";
@@ -144,13 +144,13 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           <ShippingCalculator
             label="Frete"
             placeholder="Seu CEP"
-            onCalculate={calculateShippingMock}
+            onCalculate={quoteShippingAction}
             onSelect={setShipping}
           />
           <CouponField
             applied={coupon?.codigo}
             onApply={async (code) => {
-              const result = await validateCouponMock(code);
+              const result = await validateCouponAction(code);
               if (result) setCoupon(result);
               return result != null;
             }}

@@ -11,8 +11,8 @@ import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { TextArea, TextField } from "@/components/ui/TextField";
 import { ThemeChips } from "@/components/ui/ThemeChips";
 import { useToast } from "@/components/ui/ToastProvider";
-import { calculateShippingMock } from "@/data/mock";
 import { OTHER_THEME, type CartLine, type Personalizacao } from "@/lib/cart";
+import { quoteShippingAction } from "@/app/actions/loja";
 import { formatPrice } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 import type { Product } from "@/lib/types";
@@ -231,7 +231,7 @@ function ProductFormFields({
             <span className="text-ink-muted">contados a partir da aprovação da arte</span>
           </span>
         </div>
-        <ShippingCalculator onCalculate={calculateShippingMock} />
+        <ShippingCalculator onCalculate={quoteShippingAction} />
       </div>
 
       {/* Barra fixa no mobile: o formulário é longo e o botão de compra fica fora da tela */}

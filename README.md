@@ -22,7 +22,7 @@ npm test                          # recria o banco de testes, gera o build, sobe
 npm run test:unit                 # só os testes unitários
 ```
 
-- `tests/unit`: formatação, preço digitado, slug, máscaras e CPF, totais da sacola, busca e ordenação.
+- `tests/unit`: formatação, preço digitado, slug, máscaras e CPF, totais (centavos, Pix, cupom), busca, ordenação e o fechamento do pedido no servidor (banco em memória: preço do banco, estoque, idempotência, falha do gateway, webhook).
 - `tests/e2e`: navegação, produto, sacola, checkout, favoritos, mobile (390px), painel admin (acesso, cadastro com fotos, exclusão) e acessibilidade (axe, WCAG 2.1 AA). Os testes usam um banco próprio em `data/test`, com um admin e uma cliente de teste.
 
 ## Implantação no EC2
@@ -75,6 +75,19 @@ cd /srv/mimos && git pull && npm ci && npm run build && sudo systemctl restart m
 
 As migrações novas rodam sozinhas quando o app sobe.
 
+## Pedido e pagamento
+
+O navegador manda só intenções (produtos, quantidades, personalização, endereço, serviço de frete, cupom e forma de pagamento). O servidor (`src/server/orders.ts`, chamado por `src/app/checkout/actions.ts`):
+
+1. confere cada produto no banco (ativo, preço cadastrado, pedido mínimo, tema e cor válidos, estoque);
+2. recalcula frete e cupom e calcula o total em centavos com a mesma função da sacola (`src/lib/pricing.ts`);
+3. grava o pedido, com cópia de nome e preço de cada item, e reserva o estoque numa transação;
+4. cria a cobrança no gateway com o valor calculado aqui. Se a cobrança falhar, o pedido é cancelado e o estoque volta.
+
+Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, rede instável). A confirmação (`/checkout/confirmacao?pedido=…&token=…`) é montada no servidor e exige o token do pedido. O gateway avisa o resultado em `POST /api/pagamentos/webhook`, assinado com `PAGAMENTO_WEBHOOK_SECRET`; aprovado libera a arte, recusado ou expirado cancela e devolve o estoque (uma vez só).
+
+Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO` definido e com produtos que tenham preço: o servidor não cobra valor indefinido.
+
 ## Estrutura
 
 - `src/server/db`: schema, conexão (aplica as migrações) e o catálogo inicial (`seed.ts`).
@@ -91,4 +104,4 @@ As migrações novas rodam sozinhas quando o app sobe.
 
 ## Ainda simulado
 
-Frete (`calculateShippingMock`), cupom (`validateCouponMock`, aceita `MIMO10`), pedido (`createOrderMock`), newsletter e "Avise-me". A sacola fica no `localStorage` e o checkout no `sessionStorage`; o pedido real precisa recalcular os preços no servidor. Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar ficam no armazenamento (falta uma limpeza periódica).
+Frete (`src/server/shipping.ts`, valores de `FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar ficam no armazenamento (falta uma limpeza periódica).

@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.PORT ?? 3200);
 const baseURL = `http://localhost:${PORT}`;
 export const TEST_DATA = "./data/test";
+export const TEST_WEBHOOK_SECRET = "segredo-do-webhook-de-teste";
 /** Usuários criados no banco de testes antes de subir o servidor. */
 export const TEST_USERS = {
   admin: { email: "admin@teste.com", senha: "senha-do-admin-123" },
@@ -44,7 +45,7 @@ export default defineConfig({
     // Banco e uploads só dos testes, recriados a cada execução a partir do catálogo inicial
     command: [
       `rm -rf ${TEST_DATA}`,
-      "npm run db:seed",
+      "npm run db:seed -- --precos-de-teste",
       `ADMIN_SENHA=${TEST_USERS.admin.senha} npm run admin:criar -- ${TEST_USERS.admin.email} "Admin Teste"`,
       `ADMIN_SENHA=${TEST_USERS.cliente.senha} npm run admin:criar -- --cliente ${TEST_USERS.cliente.email} "Cliente Teste"`,
       "npm run build",
@@ -58,6 +59,10 @@ export default defineConfig({
       UPLOADS_DIR: `${TEST_DATA}/uploads`,
       // Sem S3 nos testes: as fotos vão para a pasta local
       S3_BUCKET: "",
+      // Integrações simuladas com valores, para o pedido poder ser fechado
+      FRETE_SIMULADO: "PAC:2590:8,SEDEX:4590:3",
+      CUPONS_SIMULADOS: "MIMO10:10%",
+      PAGAMENTO_WEBHOOK_SECRET: TEST_WEBHOOK_SECRET,
     },
   },
 });

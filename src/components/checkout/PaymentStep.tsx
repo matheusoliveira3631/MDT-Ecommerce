@@ -6,7 +6,7 @@ import { useState, type ReactNode } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button } from "@/components/ui/Button";
 import { CardIcon, LockIcon } from "@/components/ui/icons";
-import { createOrderMock } from "@/data/mock";
+import { placeOrderAction } from "@/app/checkout/actions";
 import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
 import { PAYMENT_LABELS, type PaymentMethod } from "@/lib/checkout";
@@ -40,11 +40,12 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
   const router = useRouter();
   const { lines, coupon, clearCart } = useCart();
   const catalog = useProducts(lines.map((l) => l.produtoSlug));
-  const { cliente, endereco, frete, completeOrder } = useCheckout();
+  const { cliente, endereco, frete, ensureIdempotencyKey, finishCheckout } = useCheckout();
   const [method, setMethod] = useState<PaymentMethod>("pix");
   const [accepted, setAccepted] = useState(false);
   const [termsError, setTermsError] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string>();
 
   // CheckoutGate garante que os três existem
   if (!cliente || !endereco || !frete) return null;
@@ -78,25 +79,32 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
       return;
     }
     setTermsError(undefined);
+    setOrderError(undefined);
     setLoading(true);
     onPlacing(true);
-    try {
-      const order = await createOrderMock({
-        cliente: cliente!,
-        endereco: endereco!,
-        frete: frete!,
-        pagamento: method,
-        linhas: lines,
-        cupom: coupon?.codigo,
-        total: totals.total,
-        totalPix: totals.totalPix,
-      });
-      completeOrder(order);
-      clearCart();
-      router.push("/checkout/confirmacao");
-    } catch {
+    const fail = (message: string) => {
+      setOrderError(message);
       setLoading(false);
       onPlacing(false);
+      requestAnimationFrame(() => document.getElementById("pedido-erro")?.focus());
+    };
+    try {
+      // Só intenções: preços, frete, desconto e total são recalculados no servidor
+      const result = await placeOrderAction({
+        chaveIdempotencia: ensureIdempotencyKey(),
+        itens: lines.map((l) => ({ produtoSlug: l.produtoSlug, quantidade: l.quantidade, personalizacao: l.personalizacao })),
+        cliente,
+        endereco,
+        freteServico: frete!.servico,
+        cupom: coupon?.codigo,
+        pagamento: method,
+      });
+      if (!result.ok) return fail(result.error);
+      finishCheckout();
+      clearCart();
+      router.push(`/checkout/confirmacao?pedido=${result.numero}&token=${encodeURIComponent(result.token)}`);
+    } catch {
+      fail("Não foi possível falar com a loja. Confira a conexão e tente de novo.");
     }
   }
 
@@ -193,6 +201,11 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
           )}
         </div>
 
+        {orderError && (
+          <p id="pedido-erro" role="alert" tabIndex={-1} className="m-0 rounded-md border-2 border-error bg-white p-4 text-body font-bold text-error">
+            {orderError}
+          </p>
+        )}
         <Button type="submit" size="lg" fullWidth loading={loading} icon={<LockIcon size={18} strokeWidth={1.8} />}>
           {loading ? "Finalizando pedido" : "Finalizar pedido"}
         </Button>

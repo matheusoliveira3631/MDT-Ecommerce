@@ -1,5 +1,6 @@
 import type { ProductBadge, ProductColor } from "@/lib/types";
 import type { Database } from "./connect";
+import { eq } from "drizzle-orm";
 import { categorias, produtos } from "./schema";
 
 /*
@@ -65,6 +66,21 @@ const PRODUTOS: Array<{
   },
   { slug: "lembrancinha-tubete", nome: "Tubete personalizado", categoria: "lembrancinhas", selos: [{ tipo: "soldout" }], estoque: 0 },
 ];
+
+/** Preços só para o banco de testes (`npm run db:seed -- --precos-de-teste`). */
+export function applyTestPrices(db: Database) {
+  const precos: Record<string, [number, number]> = {
+    "caixa-milk-personalizada": [550, 500],
+    "topo-de-bolo-em-camadas": [4590, 4290],
+    "cesta-de-cafe-da-manha": [18900, 17900],
+    "kit-festa-na-caixa": [12900, 11900],
+    "kit-natal-personalizado": [8990, 8490],
+    "lembrancinha-tubete": [390, 350],
+  };
+  for (const [slug, [base, pix]] of Object.entries(precos)) {
+    db.update(produtos).set({ precoBaseCentavos: base, precoPixCentavos: pix, prazoProducaoDias: 5 }).where(eq(produtos.slug, slug)).run();
+  }
+}
 
 export function seedCatalog(db: Database): { categorias: number; produtos: number } {
   if (db.select({ id: categorias.id }).from(categorias).limit(1).get()) return { categorias: 0, produtos: 0 };

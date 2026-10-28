@@ -1,5 +1,18 @@
+import { createHmac } from "node:crypto";
+import Database from "better-sqlite3";
 import { expect, test } from "@playwright/test";
+import { TEST_DATA, TEST_WEBHOOK_SECRET } from "../../playwright.config";
 import { addToCart, cartLabel, fillIdentification } from "./helpers";
+
+/** Id da cobrança do pedido, lido direto do banco de testes (o gateway real mandaria no webhook). */
+function chargeIdOf(numero: string): string {
+  const db = new Database(`${TEST_DATA}/loja.db`, { readonly: true });
+  try {
+    return (db.prepare("select pagamento_id from pedidos where numero = ?").get(numero) as { pagamento_id: string }).pagamento_id;
+  } finally {
+    db.close();
+  }
+}
 
 test("sem itens, o checkout volta para a sacola", async ({ page }) => {
   await page.goto("/checkout/pagamento");
@@ -22,7 +35,9 @@ test("compra completa: identificação, pagamento e confirmação", async ({ pag
   await expect(page.getByText("CPF inválido. Confira os 11 números.")).toBeVisible();
   await expect(page.getByLabel("CPF")).toBeFocused();
   await page.getByLabel("CPF").fill("52998224725");
-  await expect(page.locator("aside dl")).toContainText("R$ [frete]");
+  // 20 × R$ 5,50 + frete PAC simulado (R$ 25,90)
+  await expect(page.locator("aside dl")).toContainText("R$ 25,90");
+  await expect(page.locator("aside dl")).toContainText("R$ 135,90");
   await page.getByRole("button", { name: "Continuar para o pagamento" }).click();
 
   await expect(page).toHaveURL(/\/checkout\/pagamento$/);
@@ -36,14 +51,32 @@ test("compra completa: identificação, pagamento e confirmação", async ({ pag
   await page.getByLabel(/Li e concordo/).check();
   await page.getByRole("button", { name: "Finalizar pedido" }).click();
 
-  await expect(page).toHaveURL(/\/checkout\/confirmacao$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pedido [0000] recebido");
+  await expect(page).toHaveURL(/\/checkout\/confirmacao\?pedido=MT\d{5}&token=/);
+  const heading = page.getByRole("heading", { level: 1 });
+  await expect(heading).toHaveText(/^Pedido MT\d{5} recebido$/);
+  const numero = (await heading.textContent())!.match(/MT\d{5}/)![0];
+  // Pix: 20 × R$ 5,00 (preço do Pix) + frete R$ 25,90, calculado no servidor
+  await expect(page.getByText("Pague R$ 125,90")).toBeVisible();
   await expect(page.locator("[aria-current=step]")).toContainText("Pedido recebido");
   await page.getByRole("button", { name: "Copiar" }).click();
   await expect(page.getByText("Código copiado")).toBeVisible();
 
+  // Sem o token, ninguém vê o pedido
+  expect((await page.request.get(`/checkout/confirmacao?pedido=${numero}`)).status()).toBe(404);
+  expect((await page.request.get(`/checkout/confirmacao?pedido=${numero}&token=errado`)).status()).toBe(404);
+
+  // Webhook do gateway: assinatura inválida é recusada; a válida confirma o pagamento
+  const body = JSON.stringify({ pagamentoId: chargeIdOf(numero), status: "aprovado" });
+  const bad = await page.request.post("/api/pagamentos/webhook", { data: body, headers: { "content-type": "application/json", "x-assinatura": "00" } });
+  expect(bad.status()).toBe(401);
+  const signature = createHmac("sha256", TEST_WEBHOOK_SECRET).update(body).digest("hex");
+  const ok = await page.request.post("/api/pagamentos/webhook", { data: body, headers: { "content-type": "application/json", "x-assinatura": signature } });
+  expect(ok.status()).toBe(200);
+
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pedido [0000] recebido");
+  await expect(heading).toHaveText(/^Pedido MT\d{5} recebido$/);
+  await expect(page.locator("[aria-current=step]")).toContainText("Pagamento confirmado");
+  await expect(page.getByText("Pagamento confirmado. Obrigada!")).toBeVisible();
 
   await page.goto("/");
   await expect(cartLabel(page)).toHaveAttribute("aria-label", "Sacola vazia");

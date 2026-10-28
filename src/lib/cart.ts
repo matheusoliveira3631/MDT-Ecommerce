@@ -1,3 +1,4 @@
+import { centsToReais, computeTotals, reaisToCents, type CouponRule } from "./pricing";
 import type { Product, ShippingOption } from "./types";
 
 /** Personalização de um item da sacola (HANDOFF.md, seção 9). */
@@ -62,11 +63,6 @@ export function cartTotals(lines: CartLine[], getProduct: (slug: string) => Prod
   return { itens, subtotal, subtotalPix };
 }
 
-/** Soma valores que podem faltar; o resultado é `null` se algum parcela obrigatória for `null`. */
-export function sumOrNull(...values: Array<number | null>): number | null {
-  return values.some((v) => v == null) ? null : values.reduce<number>((acc, v) => acc + (v as number), 0);
-}
-
 export interface OrderTotals extends CartTotals {
   /** `undefined` enquanto o frete não foi escolhido. */
   shipping: number | null | undefined;
@@ -76,25 +72,31 @@ export interface OrderTotals extends CartTotals {
   totalPix: number | null;
 }
 
-/** Totais da sacola e do checkout: sem frete escolhido ele fica de fora; sem cupom não há desconto. */
+/**
+ * Totais em reais para a tela, calculados em centavos por computeTotals
+ * (a mesma conta que o servidor faz ao fechar o pedido).
+ */
 export function orderTotals(
   lines: CartLine[],
   getProduct: (slug: string) => Product | undefined,
   shipping: ShippingOption | null | undefined,
-  coupon: { desconto: number | null } | null | undefined,
+  coupon: CouponRule | null | undefined,
 ): OrderTotals {
-  const totals = cartTotals(lines, getProduct);
-  const shippingValue = shipping ? shipping.valor : undefined;
-  const discount = coupon ? coupon.desconto : undefined;
-  const adjustments = [
-    shippingValue === undefined ? 0 : shippingValue,
-    discount === undefined ? 0 : discount == null ? null : -discount,
-  ];
+  const t = computeTotals(
+    lines.map((l) => {
+      const product = getProduct(l.produtoSlug);
+      return { quantidade: l.quantidade, unitCents: reaisToCents(product?.precoBase), unitPixCents: reaisToCents(product?.precoPix) };
+    }),
+    shipping ? reaisToCents(shipping.valor) : undefined,
+    coupon,
+  );
   return {
-    ...totals,
-    shipping: shippingValue,
-    discount,
-    total: sumOrNull(totals.subtotal, ...adjustments),
-    totalPix: sumOrNull(totals.subtotalPix, ...adjustments),
+    itens: t.itens,
+    subtotal: centsToReais(t.subtotal),
+    subtotalPix: centsToReais(t.subtotalPix),
+    shipping: t.shipping === undefined ? undefined : centsToReais(t.shipping),
+    discount: t.discount === undefined ? undefined : centsToReais(t.discount),
+    total: centsToReais(t.total),
+    totalPix: centsToReais(t.totalPix),
   };
 }

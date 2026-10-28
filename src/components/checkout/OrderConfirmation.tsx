@@ -1,40 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { buttonClasses } from "@/components/ui/Button";
 import { ChatIcon, CheckIcon } from "@/components/ui/icons";
-import { useProducts } from "@/components/catalog/useProducts";
-import { themeLabel } from "@/lib/cart";
-import { ORDER_STATUS, PAYMENT_LABELS, type Order } from "@/lib/checkout";
+import { ORDER_STATUS, PAYMENT_LABELS, type OrderView } from "@/lib/checkout";
 import { cn, formatPrice } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
-import { useCheckout } from "./CheckoutProvider";
 
-/** Bloco do pagamento pendente: o conteúdo real (QR Code, linha digitável) vem do gateway. */
-function PaymentInstructions({ order }: { order: Order }) {
+const reais = (cents: number) => formatPrice(cents / 100);
+
+/** Bloco do pagamento pendente: os dados (Pix, boleto) vêm do gateway. */
+function PaymentInstructions({ order }: { order: OrderView }) {
   const [copyStatus, setCopyStatus] = useState<string>();
-  const pixCode = "[código Pix copia e cola]";
+  const { metodo, status, instrucoes } = order.pagamento;
 
-  if (order.pagamento === "cartao") {
-    return (
-      <p className="m-0 text-body">
-        Pagamento no cartão em análise pelo [Mercado Pago ou Pagar.me]. Você recebe a confirmação por e-mail.
-      </p>
-    );
+  if (status === "aprovado") return <p className="m-0 text-body">Pagamento confirmado. Obrigada!</p>;
+  if (status === "recusado" || status === "expirado") {
+    return <p className="m-0 text-body font-bold text-error">O pagamento não foi concluído e o pedido foi cancelado.</p>;
   }
 
-  if (order.pagamento === "boleto") {
+  if (metodo === "cartao") {
+    return <p className="m-0 text-body">Pagamento no cartão em análise. Você recebe a confirmação por e-mail.</p>;
+  }
+
+  if (metodo === "boleto") {
     return (
       <div className="flex flex-col gap-2 text-body">
         <span className="text-sm font-bold">Linha digitável</span>
-        <code className="rounded-sm bg-rose-50 px-4 py-3 text-sm break-all">[linha digitável do boleto]</code>
-        <span className="text-sm text-ink-muted">Total: {formatPrice(order.total, "R$ [total]")}</span>
+        <code className="rounded-sm bg-rose-50 px-4 py-3 text-sm break-all">{instrucoes.linhaDigitavel}</code>
+        <span className="text-sm text-ink-muted">Total: {reais(order.totalCentavos)}</span>
       </div>
     );
   }
 
+  const pixCode = instrucoes.pixCopiaECola ?? "";
   return (
     <div className="flex flex-col items-start gap-4 sm:flex-row">
       <div
@@ -46,8 +46,7 @@ function PaymentInstructions({ order }: { order: Order }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <span className="text-body">
-          Pague {formatPrice(order.totalPix, "R$ [total Pix]")} no app do seu banco: aponte a câmera para o QR Code ou use
-          o código abaixo.
+          Pague {reais(order.totalCentavos)} no app do seu banco: aponte a câmera para o QR Code ou use o código abaixo.
         </span>
         <label htmlFor="pix-copia-e-cola" className="text-sm font-bold">
           Pix copia e cola
@@ -67,8 +66,7 @@ function PaymentInstructions({ order }: { order: Order }) {
                 setCopyStatus("Código copiado");
               } catch {
                 // Sem permissão de área de transferência: seleciona o código para copiar à mão
-                const input = e.currentTarget.parentElement?.querySelector("input");
-                input?.select();
+                e.currentTarget.parentElement?.querySelector("input")?.select();
                 setCopyStatus("Código selecionado: use Ctrl+C ou Copiar do seu celular");
               }
             }}
@@ -85,19 +83,8 @@ function PaymentInstructions({ order }: { order: Order }) {
   );
 }
 
-export function OrderConfirmation({ whatsapp }: { whatsapp: string }) {
-  const router = useRouter();
-  const { order, hydrated } = useCheckout();
-  const catalog = useProducts(order?.linhas.map((l) => l.produtoSlug) ?? []);
-
-  useEffect(() => {
-    if (hydrated && !order) router.replace("/");
-  }, [hydrated, order, router]);
-
-  if (!order) {
-    return <div aria-busy="true" aria-label="Carregando" className="mx-auto h-96 max-w-3xl animate-pulse rounded-lg bg-white" />;
-  }
-
+export function OrderConfirmation({ order, whatsapp }: { order: OrderView; whatsapp: string }) {
+  const cancelled = order.status === "cancelado";
   const currentIndex = ORDER_STATUS.findIndex((s) => s.value === order.status);
 
   return (
@@ -116,65 +103,77 @@ export function OrderConfirmation({ whatsapp }: { whatsapp: string }) {
 
       <section aria-labelledby="pagamento-title" className="flex flex-col gap-4 rounded-lg bg-white p-6 md:p-7">
         <h2 id="pagamento-title" className="m-0 text-[19px] font-bold">
-          Pagamento · {PAYMENT_LABELS[order.pagamento]}
+          Pagamento · {PAYMENT_LABELS[order.pagamento.metodo]}
         </h2>
         <PaymentInstructions order={order} />
       </section>
 
-      <section aria-labelledby="proximos-title" className="flex flex-col gap-4 rounded-lg bg-white p-6 md:p-7">
-        <h2 id="proximos-title" className="m-0 text-[19px] font-bold">
-          Próximos passos
-        </h2>
-        <ol className="m-0 flex list-none flex-col p-0">
-          {ORDER_STATUS.map((status, i) => {
-            const done = i < currentIndex;
-            const current = i === currentIndex;
-            return (
-              <li key={status.value} aria-current={current ? "step" : undefined} className="relative flex gap-4 pb-5 last:pb-0">
-                {i < ORDER_STATUS.length - 1 && (
-                  <span aria-hidden="true" className="absolute top-8 bottom-0 left-[15px] w-0.5 bg-border" />
-                )}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "relative flex size-8 shrink-0 items-center justify-center rounded-pill text-sm font-bold",
-                    current || done ? "bg-primary text-white" : "border border-border-input bg-white text-ink-muted",
+      {!cancelled && (
+        <section aria-labelledby="proximos-title" className="flex flex-col gap-4 rounded-lg bg-white p-6 md:p-7">
+          <h2 id="proximos-title" className="m-0 text-[19px] font-bold">
+            Próximos passos
+          </h2>
+          <ol className="m-0 flex list-none flex-col p-0">
+            {ORDER_STATUS.map((status, i) => {
+              const done = i < currentIndex;
+              const current = i === currentIndex;
+              return (
+                <li key={status.value} aria-current={current ? "step" : undefined} className="relative flex gap-4 pb-5 last:pb-0">
+                  {i < ORDER_STATUS.length - 1 && (
+                    <span aria-hidden="true" className="absolute top-8 bottom-0 left-[15px] w-0.5 bg-border" />
                   )}
-                >
-                  {done ? <CheckIcon size={16} /> : i + 1}
-                </span>
-                <span className="flex flex-col pt-1">
-                  <strong className={cn("text-body", !current && !done && "text-ink-muted")}>{status.label}</strong>
-                  <span className="text-sm text-ink-muted">{status.text}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "relative flex size-8 shrink-0 items-center justify-center rounded-pill text-sm font-bold",
+                      current || done ? "bg-primary text-white" : "border border-border-input bg-white text-ink-muted",
+                    )}
+                  >
+                    {done ? <CheckIcon size={16} /> : i + 1}
+                  </span>
+                  <span className="flex flex-col pt-1">
+                    <strong className={cn("text-body", !current && !done && "text-ink-muted")}>{status.label}</strong>
+                    <span className="text-sm text-ink-muted">{status.text}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
 
       <section aria-labelledby="itens-title" className="flex flex-col gap-3 rounded-lg bg-white p-6 md:p-7">
         <h2 id="itens-title" className="m-0 text-[19px] font-bold">
           Itens do pedido
         </h2>
         <ul className="m-0 flex list-none flex-col gap-2 p-0 text-body">
-          {order.linhas.map((line) => (
-            <li key={line.id} className="flex justify-between gap-3">
+          {order.itens.map((item, i) => (
+            <li key={i} className="flex justify-between gap-3">
               <span>
-                {catalog.get(line.produtoSlug)?.nome ?? line.produtoSlug}
+                {item.nome}
                 <span className="text-ink-muted">
                   {" "}
-                  · {themeLabel(line.personalizacao)} · {line.personalizacao.nome}
+                  · {item.tema} · {item.nomeNaArte} · {item.quantidade} un.
                 </span>
               </span>
-              <span className="whitespace-nowrap">{line.quantidade} un.</span>
+              <span className="whitespace-nowrap">{reais(item.precoUnitarioCentavos * item.quantidade)}</span>
             </li>
           ))}
         </ul>
-        <div className="flex justify-between border-t border-border pt-3 text-lg font-extrabold">
-          <span>Total</span>
-          <span>{formatPrice(order.pagamento === "pix" ? order.totalPix : order.total, "R$ [total]")}</span>
-        </div>
+        <dl className="m-0 grid grid-cols-[1fr_auto] gap-2 border-t border-border pt-3 text-body">
+          <dt className="text-ink-muted">Subtotal</dt>
+          <dd className="m-0 text-right">{reais(order.subtotalCentavos)}</dd>
+          <dt className="text-ink-muted">Frete ({order.freteServico})</dt>
+          <dd className="m-0 text-right">{reais(order.freteCentavos)}</dd>
+          {order.descontoCentavos > 0 && (
+            <>
+              <dt className="text-ink-muted">Desconto{order.cupom ? ` (${order.cupom})` : ""}</dt>
+              <dd className="m-0 text-right">−{reais(order.descontoCentavos)}</dd>
+            </>
+          )}
+          <dt className="pt-1 text-lg font-extrabold">Total</dt>
+          <dd className="m-0 pt-1 text-right text-lg font-extrabold">{reais(order.totalCentavos)}</dd>
+        </dl>
       </section>
 
       <div className="flex flex-wrap justify-center gap-3">

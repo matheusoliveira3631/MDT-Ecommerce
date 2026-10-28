@@ -1,8 +1,8 @@
-import type { InstagramPost, NavLink, ShippingOption, Step, StoreConfig, Testimonial } from "@/lib/types";
-import type { Order } from "@/lib/checkout";
+import type { InstagramPost, NavLink, Step, StoreConfig, Testimonial } from "@/lib/types";
 
 /*
- * Configuração da loja e integrações ainda simuladas. Os valores entre colchetes
+ * Configuração da loja e integrações ainda simuladas (newsletter e avise-me;
+ * frete, cupom e pagamento ficam em src/server). Os valores entre colchetes
  * são placeholders do design. Produtos e categorias vêm do banco (src/server/catalog.ts).
  */
 
@@ -61,23 +61,7 @@ export const instagramPosts: InstagramPost[] = Array.from({ length: 6 }, (_, i) 
   alt: `Post ${i + 1} do Instagram`,
 }));
 
-/**
- * Simula a validação de cupom. `MIMO10` é o cupom de exemplo; o valor do desconto
- * fica `null` (placeholder) até existir a regra real.
- */
-export async function validateCouponMock(code: string): Promise<{ codigo: string; desconto: number | null } | null> {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return code.trim().toUpperCase() === "MIMO10" ? { codigo: "MIMO10", desconto: null } : null;
-}
 
-/**
- * Simula a criação do pedido no gateway (Mercado Pago ou Pagar.me, a definir).
- * O número fica como placeholder até existir o backend.
- */
-export async function createOrderMock(input: Omit<Order, "numero" | "status" | "criadoEm">): Promise<Order> {
-  await new Promise((resolve) => setTimeout(resolve, 900));
-  return { ...input, numero: "[0000]", status: "aguardando_arte", criadoEm: new Date().toISOString() };
-}
 
 /** Simula a inscrição na newsletter (ferramenta de e-mail a definir). */
 export async function subscribeNewsletterMock(email: string): Promise<void> {
@@ -92,12 +76,3 @@ export async function subscribeRestockMock(slug: string, email: string): Promise
   await new Promise((resolve) => setTimeout(resolve, 600));
 }
 
-/** Simula a cotação de frete (Melhor Envio ou Correios, a definir). */
-export async function calculateShippingMock(cep: string): Promise<ShippingOption[]> {
-  await new Promise((resolve) => setTimeout(resolve, 700));
-  if (/^0+$/.test(cep)) return [];
-  return [
-    { servico: "PAC", prazo: "[X] dias úteis", valor: null },
-    { servico: "SEDEX", prazo: "[X] dias úteis", valor: null },
-  ];
-}

@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/icons";
 import { TextField } from "@/components/ui/TextField";
-import { calculateShippingMock } from "@/data/mock";
+import { quoteShippingAction } from "@/app/actions/loja";
 import { UFS, type Address, type Customer } from "@/lib/checkout";
 import { cn, formatPrice, isValidCpf, maskCep, maskCpf, maskPhone } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
@@ -94,7 +94,7 @@ export function IdentificationForm({
     }
     let cancelled = false;
     setLoadingShipping(true);
-    calculateShippingMock(cepDigits).then((result) => {
+    quoteShippingAction(cepDigits).then((result) => {
       if (cancelled) return;
       setLoadingShipping(false);
       if (result.length === 0) {
