@@ -163,6 +163,15 @@ export function getProduct(slug: string): Product | undefined {
   return products.find((p) => p.slug === slug);
 }
 
+export function getCategory(slug: string): Category | undefined {
+  return categories.find((c) => c.slug === slug);
+}
+
+export function getCategoryProducts(slug: string): Product[] {
+  const category = getCategory(slug);
+  return category ? products.filter((p) => p.categoria === category.nome) : [];
+}
+
 export function getRelatedProducts(slug: string, limit = 4): Product[] {
   return products.filter((p) => p.slug !== slug && p.ativo && p.estoque > 0).slice(0, limit);
 }
