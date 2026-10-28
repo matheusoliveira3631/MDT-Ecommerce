@@ -7,7 +7,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { BagIcon, ChatIcon } from "@/components/ui/icons";
 import { Toast } from "@/components/ui/Toast";
 import { calculateShippingMock, getProduct, validateCouponMock } from "@/data/mock";
-import { cartTotals, sumOrNull, type CartLine } from "@/lib/cart";
+import { orderTotals, type CartLine } from "@/lib/cart";
 import { pluralItens } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
 import { CartLineItem } from "./CartLineItem";
@@ -47,7 +47,7 @@ function EmptyCart() {
 /** Skeleton nas dimensões finais enquanto a sacola salva é lida. */
 function CartSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Carregando a sacola" className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <div aria-busy="true" aria-label="Carregando a sacola" className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex flex-col gap-4">
         {[0, 1].map((i) => (
           <div key={i} className="flex gap-5 rounded-lg bg-white p-[22px]">
@@ -66,21 +66,14 @@ function CartSkeleton() {
 }
 
 export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewProps) {
-  const { lines, hydrated, updateLine, removeLine, restoreLine } = useCart();
+  const { lines, hydrated, updateLine, removeLine, restoreLine, coupon, setCoupon } = useCart();
   const [shipping, setShipping] = useState<ShippingOption | null>(null);
-  const [coupon, setCoupon] = useState<{ codigo: string; desconto: number | null } | null>(null);
   const [removed, setRemoved] = useState<{ line: CartLine; index: number } | null>(null);
   const dismissToast = useCallback(() => setRemoved(null), []);
 
   if (!hydrated) return <CartSkeleton />;
 
-  const totals = cartTotals(lines, getProduct);
-  const shippingValue = shipping ? shipping.valor : undefined;
-  const discountValue = coupon ? coupon.desconto : undefined;
-  // Sem CEP o frete fica de fora; sem cupom o desconto não entra
-  const adjustments = [shippingValue === undefined ? 0 : shippingValue, discountValue === undefined ? 0 : discountValue == null ? null : -discountValue];
-  const total = sumOrNull(totals.subtotal, ...adjustments);
-  const pixTotal = sumOrNull(totals.subtotalPix, ...adjustments);
+  const totals = orderTotals(lines, getProduct, shipping, coupon);
 
   const toast = (
     <Toast
@@ -117,7 +110,7 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
         <span className="font-body text-[17px] font-semibold text-ink-muted">({pluralItens(totals.itens)})</span>
       </h1>
 
-      <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex min-w-0 flex-col gap-4">
           <ul className="m-0 flex list-none flex-col gap-4 p-0">
             {lines.map((line) => (
@@ -149,10 +142,10 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
 
         <OrderSummary
           subtotal={totals.subtotal}
-          shipping={shippingValue}
-          discount={discountValue}
-          total={total}
-          pixTotal={pixTotal}
+          shipping={totals.shipping}
+          discount={totals.discount}
+          total={totals.total}
+          pixTotal={totals.totalPix}
           parcelas={parcelas}
           meiosPagamento={meiosPagamento}
           checkoutHref="/checkout/identificacao"

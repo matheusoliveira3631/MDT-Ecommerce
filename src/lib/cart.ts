@@ -1,4 +1,4 @@
-import type { Product } from "./types";
+import type { Product, ShippingOption } from "./types";
 
 /** Personalização de um item da sacola (HANDOFF.md, seção 9). */
 export interface Personalizacao {
@@ -65,4 +65,36 @@ export function cartTotals(lines: CartLine[], getProduct: (slug: string) => Prod
 /** Soma valores que podem faltar; o resultado é `null` se algum parcela obrigatória for `null`. */
 export function sumOrNull(...values: Array<number | null>): number | null {
   return values.some((v) => v == null) ? null : values.reduce<number>((acc, v) => acc + (v as number), 0);
+}
+
+export interface OrderTotals extends CartTotals {
+  /** `undefined` enquanto o frete não foi escolhido. */
+  shipping: number | null | undefined;
+  /** `undefined` sem cupom. */
+  discount: number | null | undefined;
+  total: number | null;
+  totalPix: number | null;
+}
+
+/** Totais da sacola e do checkout: sem frete escolhido ele fica de fora; sem cupom não há desconto. */
+export function orderTotals(
+  lines: CartLine[],
+  getProduct: (slug: string) => Product | undefined,
+  shipping: ShippingOption | null | undefined,
+  coupon: { desconto: number | null } | null | undefined,
+): OrderTotals {
+  const totals = cartTotals(lines, getProduct);
+  const shippingValue = shipping ? shipping.valor : undefined;
+  const discount = coupon ? coupon.desconto : undefined;
+  const adjustments = [
+    shippingValue === undefined ? 0 : shippingValue,
+    discount === undefined ? 0 : discount == null ? null : -discount,
+  ];
+  return {
+    ...totals,
+    shipping: shippingValue,
+    discount,
+    total: sumOrNull(totals.subtotal, ...adjustments),
+    totalPix: sumOrNull(totals.subtotalPix, ...adjustments),
+  };
 }

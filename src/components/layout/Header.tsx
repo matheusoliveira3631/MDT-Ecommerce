@@ -56,7 +56,8 @@ export function SearchBar({ defaultQuery, variant = "header", className }: Searc
   );
 }
 
-export type CheckoutStep = 1 | 2 | 3;
+/** 4 = compra concluída (todas as etapas feitas). */
+export type CheckoutStep = 1 | 2 | 3 | 4;
 
 const checkoutSteps = ["Sacola", "Identificação", "Pagamento"] as const;
 

@@ -8,6 +8,7 @@ import type {
   StoreConfig,
   Testimonial,
 } from "@/lib/types";
+import type { Order } from "@/lib/checkout";
 
 /*
  * Dados mockados. Os valores entre colchetes são placeholders do design:
@@ -183,6 +184,15 @@ export function getRelatedProducts(slug: string, limit = 4): Product[] {
 export async function validateCouponMock(code: string): Promise<{ codigo: string; desconto: number | null } | null> {
   await new Promise((resolve) => setTimeout(resolve, 600));
   return code.trim().toUpperCase() === "MIMO10" ? { codigo: "MIMO10", desconto: null } : null;
+}
+
+/**
+ * Simula a criação do pedido no gateway (Mercado Pago ou Pagar.me, a definir).
+ * O número fica como placeholder até existir o backend.
+ */
+export async function createOrderMock(input: Omit<Order, "numero" | "status" | "criadoEm">): Promise<Order> {
+  await new Promise((resolve) => setTimeout(resolve, 900));
+  return { ...input, numero: "[0000]", status: "aguardando_arte", criadoEm: new Date().toISOString() };
 }
 
 /** Simula a cotação de frete (Melhor Envio ou Correios, a definir). */

@@ -18,27 +18,15 @@ export interface OrderSummaryProps {
   children?: ReactNode;
 }
 
-/** Card do resumo: fixo à direita no desktop (sticky), abaixo da lista no mobile. */
-export function OrderSummary({
-  subtotal,
-  shipping,
-  discount,
-  total,
-  pixTotal,
-  parcelas,
-  meiosPagamento,
-  checkoutHref,
-  children,
-}: OrderSummaryProps) {
+export type TotalsListProps = Pick<
+  OrderSummaryProps,
+  "subtotal" | "shipping" | "discount" | "total" | "pixTotal" | "parcelas"
+>;
+
+/** Subtotal, frete, desconto, total e a linha do Pix/parcelas. */
+export function TotalsList({ subtotal, shipping, discount, total, pixTotal, parcelas }: TotalsListProps) {
   return (
-    <aside
-      aria-labelledby="resumo-title"
-      className="flex flex-col gap-[18px] rounded-lg bg-white p-6 md:p-7 lg:sticky lg:top-6"
-    >
-      <h2 id="resumo-title" className="m-0 text-[22px] font-bold">
-        Resumo
-      </h2>
-      {children}
+    <>
       <dl className="m-0 grid grid-cols-[1fr_auto] gap-2.5 border-t border-border pt-[18px] text-body">
         <dt className="text-ink-muted">Subtotal</dt>
         <dd className="m-0 text-right">{formatPrice(subtotal, "R$ [subtotal]")}</dd>
@@ -62,6 +50,39 @@ export function OrderSummary({
       <span className="-mt-2 text-sm text-ink-muted">
         ou {formatPrice(pixTotal, "R$ [total Pix]")} no Pix · até {parcelas}x no cartão
       </span>
+    </>
+  );
+}
+
+/** Card do resumo: fixo à direita no desktop (sticky), abaixo da lista no mobile. */
+export function OrderSummary({
+  subtotal,
+  shipping,
+  discount,
+  total,
+  pixTotal,
+  parcelas,
+  meiosPagamento,
+  checkoutHref,
+  children,
+}: OrderSummaryProps) {
+  return (
+    <aside
+      aria-labelledby="resumo-title"
+      className="flex flex-col gap-[18px] rounded-lg bg-white p-6 md:p-7 lg:sticky lg:top-6"
+    >
+      <h2 id="resumo-title" className="m-0 text-[22px] font-bold">
+        Resumo
+      </h2>
+      {children}
+      <TotalsList
+        subtotal={subtotal}
+        shipping={shipping}
+        discount={discount}
+        total={total}
+        pixTotal={pixTotal}
+        parcelas={parcelas}
+      />
       <Link href={checkoutHref} className={buttonClasses({ size: "lg", fullWidth: true })}>
         Finalizar compra
       </Link>

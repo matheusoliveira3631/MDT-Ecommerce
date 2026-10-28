@@ -4,6 +4,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { sameLine, type CartLine } from "@/lib/cart";
 
 const STORAGE_KEY = "mimos-da-thaty:sacola";
+const COUPON_KEY = "mimos-da-thaty:cupom";
+
+export interface AppliedCoupon {
+  codigo: string;
+  /** `null` enquanto a regra de desconto não existe (placeholder na tela). */
+  desconto: number | null;
+}
 
 interface CartContextValue {
   lines: CartLine[];
@@ -14,6 +21,10 @@ interface CartContextValue {
   updateLine: (id: string, changes: Partial<Omit<CartLine, "id">>) => void;
   removeLine: (id: string) => { line: CartLine; index: number } | null;
   restoreLine: (line: CartLine, index: number) => void;
+  /** Esvazia a sacola e o cupom (pedido finalizado). */
+  clearCart: () => void;
+  coupon: AppliedCoupon | null;
+  setCoupon: (coupon: AppliedCoupon | null) => void;
   drawerOpen: boolean;
   /** Abre a sacola lateral e devolve o foco a `returnFocus` ao fechar. */
   openDrawer: (returnFocus?: HTMLElement | null) => void;
@@ -32,6 +43,15 @@ function readStorage(): CartLine[] {
   }
 }
 
+function readCoupon(): AppliedCoupon | null {
+  try {
+    const raw = window.localStorage.getItem(COUPON_KEY);
+    return raw ? (JSON.parse(raw) as AppliedCoupon) : null;
+  } catch {
+    return null;
+  }
+}
+
 function newId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -45,11 +65,13 @@ function newId() {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     setLines(readStorage());
+    setCoupon(readCoupon());
     setHydrated(true);
   }, []);
 
@@ -57,10 +79,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      if (coupon) window.localStorage.setItem(COUPON_KEY, JSON.stringify(coupon));
+      else window.localStorage.removeItem(COUPON_KEY);
     } catch {
       // Armazenamento indisponível (aba anônima, cota): a sacola vale só nesta visita.
     }
-  }, [lines, hydrated]);
+  }, [lines, coupon, hydrated]);
 
   /** Personalização igual à de uma linha existente soma a quantidade; diferente vira outra linha. */
   const addLine = useCallback((input: Omit<CartLine, "id">) => {
@@ -96,6 +120,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearCart = useCallback(() => {
+    setLines([]);
+    setCoupon(null);
+  }, []);
+
   const openDrawer = useCallback((returnFocus?: HTMLElement | null) => {
     returnFocusRef.current = returnFocus ?? (document.activeElement as HTMLElement | null);
     setDrawerOpen(true);
@@ -116,11 +145,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       updateLine,
       removeLine,
       restoreLine,
+      clearCart,
+      coupon,
+      setCoupon,
       drawerOpen,
       openDrawer,
       closeDrawer,
     }),
-    [lines, hydrated, addLine, updateLine, removeLine, restoreLine, drawerOpen, openDrawer, closeDrawer],
+    [lines, hydrated, addLine, updateLine, removeLine, restoreLine, clearCart, coupon, drawerOpen, openDrawer, closeDrawer],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
