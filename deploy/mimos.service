@@ -1,0 +1,21 @@
+# /etc/systemd/system/mimos.service
+# Mantém a loja rodando e reinicia se cair. Ajuste User e WorkingDirectory.
+[Unit]
+Description=Mimos da Thaty (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/srv/mimos
+EnvironmentFile=/srv/mimos/.env.production
+ExecStart=/usr/bin/npm run start -- --port 3000 --hostname 127.0.0.1
+Restart=always
+RestartSec=5
+# Só escreve no próprio diretório de dados
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/srv/mimos/data
+
+[Install]
+WantedBy=multi-user.target

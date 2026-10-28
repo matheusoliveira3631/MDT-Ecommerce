@@ -1,0 +1,14 @@
+# /etc/systemd/system/litestream.service
+# Replica o SQLite para o S3 continuamente (backup com perda de no máximo alguns segundos).
+[Unit]
+Description=Litestream (backup contínuo do SQLite)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/usr/bin/litestream replicate -config /etc/litestream.yml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

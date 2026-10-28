@@ -1,0 +1,8 @@
+[
+  {
+    "AllowedOrigins": ["https://seudominio.com.br", "https://www.seudominio.com.br"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["Content-Type", "Cache-Control"],
+    "MaxAgeSeconds": 3600
+  }
+]

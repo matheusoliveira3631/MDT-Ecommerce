@@ -1,0 +1,9 @@
+# /etc/litestream.yml — credenciais vêm do papel IAM da instância
+dbs:
+  - path: /srv/mimos/data/loja.db
+    replicas:
+      - type: s3
+        bucket: SEU-BUCKET
+        path: backups/loja.db
+        region: sa-east-1
+        retention: 720h # guarda 30 dias de histórico

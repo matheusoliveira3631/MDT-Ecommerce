@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "FotosDaLoja",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:DeleteObject"],
+      "Resource": ["arn:aws:s3:::SEU-BUCKET/produtos/*", "arn:aws:s3:::SEU-BUCKET/categorias/*"]
+    },
+    {
+      "Sid": "BackupLitestream",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::SEU-BUCKET/backups/*"
+    },
+    {
+      "Sid": "ListarBackups",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::SEU-BUCKET",
+      "Condition": { "StringLike": { "s3:prefix": ["backups/*"] } }
+    }
+  ]
+}

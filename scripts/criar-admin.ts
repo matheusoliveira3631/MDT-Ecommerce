@@ -5,6 +5,7 @@
  * Com --cliente cria (ou rebaixa para) um usuário comum, útil para testes.
  * A senha é pedida no terminal (ou vem de ADMIN_SENHA, para automação).
  */
+import "./env";
 import readline from "node:readline";
 import { eq } from "drizzle-orm";
 import { createDatabase } from "../src/server/db/connect";

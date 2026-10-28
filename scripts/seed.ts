@@ -2,6 +2,7 @@
  * Importa o catálogo inicial num banco vazio.
  * Uso: npm run db:seed   (DATABASE_PATH define o arquivo; padrão ./data/loja.db)
  */
+import "./env";
 import { createDatabase } from "../src/server/db/connect";
 import { seedCatalog } from "../src/server/db/seed";
 
