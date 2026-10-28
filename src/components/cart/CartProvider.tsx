@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { sameLine, type CartLine } from "@/lib/cart";
 
 const STORAGE_KEY = "mimos-da-thaty:sacola";
@@ -26,8 +26,8 @@ interface CartContextValue {
   coupon: AppliedCoupon | null;
   setCoupon: (coupon: AppliedCoupon | null) => void;
   drawerOpen: boolean;
-  /** Abre a sacola lateral e devolve o foco a `returnFocus` ao fechar. */
-  openDrawer: (returnFocus?: HTMLElement | null) => void;
+  /** Abre a sacola lateral; ao fechar, o foco volta para onde estava. */
+  openDrawer: () => void;
   closeDrawer: () => void;
 }
 
@@ -67,7 +67,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     setLines(readStorage());
@@ -125,16 +124,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCoupon(null);
   }, []);
 
-  const openDrawer = useCallback((returnFocus?: HTMLElement | null) => {
-    returnFocusRef.current = returnFocus ?? (document.activeElement as HTMLElement | null);
-    setDrawerOpen(true);
-  }, []);
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
 
-  const closeDrawer = useCallback(() => {
-    setDrawerOpen(false);
-    // Devolve o foco a quem abriu, depois que o diálogo sai da árvore
-    requestAnimationFrame(() => returnFocusRef.current?.focus());
-  }, []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   const value = useMemo<CartContextValue>(
     () => ({

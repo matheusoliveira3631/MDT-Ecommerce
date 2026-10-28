@@ -122,7 +122,7 @@ function ProductFormFields({
     addLine({ produtoSlug: product.slug, quantidade, personalizacao });
     // Desktop: sacola lateral. Mobile: toast com "Ver sacola".
     if (window.matchMedia("(min-width: 1024px)").matches) {
-      openDrawer(e.nativeEvent instanceof SubmitEvent ? (e.nativeEvent.submitter as HTMLElement | null) : null);
+      openDrawer();
     } else {
       showToast({ message: `Adicionado à sacola: ${product.nome}`, action: { label: "Ver sacola", href: "/sacola" } });
     }

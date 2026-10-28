@@ -94,6 +94,8 @@
   --animate-fade-out: fade-out 200ms ease-out forwards;
   --animate-drawer-in: drawer-in 280ms var(--ease-drawer);
   --animate-drawer-out: drawer-out 200ms var(--ease-drawer) forwards;
+  --animate-drawer-in-left: drawer-in-left 280ms var(--ease-drawer);
+  --animate-drawer-out-left: drawer-out-left 200ms var(--ease-drawer) forwards;
   --animate-overlay-in: fade-in 280ms var(--ease-drawer);
   --animate-overlay-out: fade-out 200ms var(--ease-drawer) forwards;
 
@@ -125,6 +127,18 @@
   @keyframes drawer-out {
     to {
       transform: translateX(100%);
+    }
+  }
+
+  @keyframes drawer-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes drawer-out-left {
+    to {
+      transform: translateX(-100%);
     }
   }
 }
@@ -197,3 +211,28 @@
   }
 }
 /* prefers-reduced-motion: deslocamentos usam a variante motion-safe: nos componentes */
+
+/* Acordeão (<details>): anima a altura onde o navegador suporta; nos outros abre sem animação */
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+
+  details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition:
+      block-size 200ms ease-in-out,
+      content-visibility 200ms ease-in-out allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content {
+      transition: none;
+    }
+  }
+}

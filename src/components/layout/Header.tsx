@@ -128,6 +128,11 @@ export function Header(props: HeaderProps) {
       <CategoryNav
         links={categories.map((c) => ({ label: c.nome, href: `/categoria/${c.slug}` }))}
         highlight={{ label: "Como funciona", href: "/#como-funciona" }}
+        extraLinks={[
+          { label: "Todos os produtos", href: "/busca?q=" },
+          { label: "Favoritos", href: "/favoritos" },
+          { label: "Ajuda", href: "/ajuda" },
+        ]}
       />
     </header>
   );
