@@ -106,7 +106,7 @@ export default function ComponentesPage() {
               </Section>
 
               <Section title="Card de produto · compact" description="Usado em produtos relacionados.">
-                <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-2 gap-5">
                   <ProductCard product={products[0]} variant="compact" />
                   <ProductCard product={products[4]} variant="compact" />
                 </div>

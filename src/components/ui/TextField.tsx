@@ -9,6 +9,8 @@ interface FieldProps {
   error?: string;
   /** Mostra o contador de caracteres a partir deste comprimento (requer `maxLength`). */
   counterFrom?: number;
+  /** Troca o tamanho padrão do label (14px), ex.: quando ele é o título de um passo. */
+  labelClassName?: string;
 }
 
 const controlBase =
@@ -74,13 +76,23 @@ function FieldFooter({
 
 export type TextFieldProps = FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, "size">;
 
-export function TextField({ label, hint, error, counterFrom, id, className, onChange, ...props }: TextFieldProps) {
+export function TextField({
+  label,
+  hint,
+  error,
+  counterFrom,
+  labelClassName,
+  id,
+  className,
+  onChange,
+  ...props
+}: TextFieldProps) {
   const { fieldId, hintId, errorId, describedBy } = useField({ hint, error }, id);
   const [length, setLength] = useState(String(props.value ?? props.defaultValue ?? "").length);
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={fieldId} className="text-sm font-bold">
+      <label htmlFor={fieldId} className={cn("font-bold", labelClassName ?? "text-sm")}>
         {label}
       </label>
       <input
@@ -109,13 +121,24 @@ export function TextField({ label, hint, error, counterFrom, id, className, onCh
 
 export type TextAreaProps = FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export function TextArea({ label, hint, error, counterFrom, id, className, onChange, rows = 4, ...props }: TextAreaProps) {
+export function TextArea({
+  label,
+  hint,
+  error,
+  counterFrom,
+  labelClassName,
+  id,
+  className,
+  onChange,
+  rows = 4,
+  ...props
+}: TextAreaProps) {
   const { fieldId, hintId, errorId, describedBy } = useField({ hint, error }, id);
   const [length, setLength] = useState(String(props.value ?? props.defaultValue ?? "").length);
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={fieldId} className="text-sm font-bold">
+      <label htmlFor={fieldId} className={cn("font-bold", labelClassName ?? "text-sm")}>
         {label}
       </label>
       <textarea

@@ -19,7 +19,7 @@ export interface ProductCardProps {
 }
 
 function ProductImage({ product, sizes, priority }: { product: Product; sizes: string; priority?: boolean }) {
-  const foto = product.fotos[0];
+  const foto = product.fotos[0]?.src;
   return (
     <div className="relative aspect-square overflow-hidden rounded-md bg-placeholder">
       {foto ? (
@@ -59,23 +59,20 @@ export function ProductCard({ product, variant = "default", favorite, onFavorite
     onFavorite?.(product, next);
   }
 
+  // Relacionados ("Combina com"): só foto, nome e preço, sem selo, favoritar ou botão
   if (variant === "compact") {
     return (
-      <article className="group flex gap-4">
-        <Link href={href} className="w-[140px] shrink-0" tabIndex={-1} aria-hidden="true">
-          <ProductImage product={product} sizes="140px" />
+      <article className="group flex flex-col gap-3">
+        <Link href={href} tabIndex={-1} aria-hidden="true" className="block">
+          <ProductImage product={product} sizes="(min-width: 1024px) 280px, 50vw" />
         </Link>
-        <div className="flex min-w-0 flex-col justify-center gap-1.5">
-          <span className="text-xs text-ink-muted">{product.categoria}</span>
-          <Link
-            href={href}
-            className="line-clamp-2 font-heading text-[17px] font-bold text-ink no-underline hover:text-primary-hover hover:underline"
-          >
-            {product.nome}
-          </Link>
-          {price}
-          {selo && <Badge variant={selo.tipo} label={selo.label} className="mt-1 self-start" />}
-        </div>
+        <Link
+          href={href}
+          className="line-clamp-2 font-heading text-[17px] font-bold text-ink no-underline hover:text-primary-hover hover:underline"
+        >
+          {product.nome}
+        </Link>
+        {price}
       </article>
     );
   }

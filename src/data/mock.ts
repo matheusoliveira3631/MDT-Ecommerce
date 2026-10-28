@@ -1,4 +1,13 @@
-import type { Category, InstagramPost, NavLink, Product, Step, StoreConfig, Testimonial } from "@/lib/types";
+import type {
+  Category,
+  InstagramPost,
+  NavLink,
+  Product,
+  ShippingOption,
+  Step,
+  StoreConfig,
+  Testimonial,
+} from "@/lib/types";
 
 /*
  * Dados mockados. Os valores entre colchetes são placeholders do design:
@@ -20,6 +29,8 @@ export const store: StoreConfig = {
   instagram: "[seuinstagram]",
   cnpj: "[00.000.000/0001-00]",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
+  referenciaMaxMB: null,
+  politicaEntrega: "[Prazo de produção, opções de envio e retirada, política para produtos personalizados.]",
   bannerSazonal: {
     destaque: "coleção de fim de ano",
     titulo: "Natal com mimos para presentear quem você ama",
@@ -44,18 +55,26 @@ export const helpLinks: NavLink[] = [
   { label: "Perguntas frequentes", href: "/ajuda/perguntas-frequentes" },
 ];
 
+const photoSlots = (nome: string) =>
+  Array.from({ length: 4 }, (_, i) => ({ alt: `${nome}, foto ${i + 1}` }));
+
 const baseProduct = {
-  fotos: [],
+  resumo: "[Resumo do produto em uma ou duas frases.]",
+  descricao: "[Descrição completa do produto: o que acompanha, para que ocasiões é indicado, sugestões de recheio.]",
+  medidas: "[Altura × largura × profundidade, tipo e gramatura do papel, acabamento.]",
   precoBase: null,
   precoPix: null,
   precoVaria: true,
   pedidoMinimo: 1,
   prazoProducaoDias: "[X]",
-  temas: ["Jardim encantado", "Safari", "Fundo do mar", "Princesas"],
+  temas: ["Jardim encantado", "Ursinho", "Safari", "Princesa", "Fundo do mar"],
   cores: [
     { nome: "Rosa e branco", hex: "#F3CBD6" },
-    { nome: "Lilás", hex: "#D9C8F0" },
-    { nome: "Azul bebê", hex: "#CFE3F5" },
+    { nome: "Lilás", hex: "#D9C8EE" },
+    { nome: "Azul bebê", hex: "#C9DFF2" },
+    { nome: "Verde menta", hex: "#CBE8DA" },
+    { nome: "Amarelo suave", hex: "#F6E3A8" },
+    { nome: "Neutros", hex: "#E8DDD3" },
   ],
   aceitaReferencia: true,
   estoque: 99,
@@ -67,7 +86,10 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "caixa-milk-personalizada",
     nome: "Caixa milk personalizada",
+    fotos: photoSlots("Caixa milk personalizada"),
     categoria: "Caixas milk",
+    resumo:
+      "Caixinha no formato de embalagem de leite, impressa com o tema, o nome e as cores da sua festa. Perfeita para lembrancinha com doces.",
     pedidoMinimo: 20,
     selos: [{ tipo: "bestseller" }],
   },
@@ -75,6 +97,7 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "topo-de-bolo-em-camadas",
     nome: "Topo de bolo em camadas",
+    fotos: photoSlots("Topo de bolo em camadas"),
     categoria: "Topos de bolo",
     selos: [{ tipo: "customizable" }],
   },
@@ -82,6 +105,7 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "cesta-de-cafe-da-manha",
     nome: "Cesta de café da manhã",
+    fotos: photoSlots("Cesta de café da manhã"),
     categoria: "Cestas",
     selos: [{ tipo: "customizable" }],
   },
@@ -89,6 +113,7 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "kit-festa-na-caixa",
     nome: "Kit festa na caixa",
+    fotos: photoSlots("Kit festa na caixa"),
     categoria: "Kits festa",
     selos: [{ tipo: "new" }],
   },
@@ -96,6 +121,7 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "kit-natal-personalizado",
     nome: "Kit de Natal personalizado com caixa, tag, cartão e laço de cetim para presentear",
+    fotos: photoSlots("Kit de Natal personalizado com caixa, tag, cartão e laço de cetim para presentear"),
     categoria: "Datas especiais",
     selos: [{ tipo: "deadline", label: "Encomenda até [data]" }],
   },
@@ -103,6 +129,7 @@ export const products: Product[] = [
     ...baseProduct,
     slug: "lembrancinha-tubete",
     nome: "Tubete personalizado",
+    fotos: photoSlots("Tubete personalizado"),
     categoria: "Lembrancinhas",
     selos: [{ tipo: "soldout" }],
     estoque: 0,
@@ -130,5 +157,23 @@ export const instagramPosts: InstagramPost[] = Array.from({ length: 6 }, (_, i) 
   href: `https://instagram.com/${store.instagram}`,
   alt: `Post ${i + 1} do Instagram`,
 }));
+
+export function getProduct(slug: string): Product | undefined {
+  return products.find((p) => p.slug === slug);
+}
+
+export function getRelatedProducts(slug: string, limit = 4): Product[] {
+  return products.filter((p) => p.slug !== slug && p.ativo && p.estoque > 0).slice(0, limit);
+}
+
+/** Simula a cotação de frete (Melhor Envio ou Correios, a definir). */
+export async function calculateShippingMock(cep: string): Promise<ShippingOption[]> {
+  await new Promise((resolve) => setTimeout(resolve, 700));
+  if (/^0+$/.test(cep)) return [];
+  return [
+    { servico: "PAC", prazo: "[X] dias úteis", valor: null },
+    { servico: "SEDEX", prazo: "[X] dias úteis", valor: null },
+  ];
+}
 
 export const cartCount = 2;

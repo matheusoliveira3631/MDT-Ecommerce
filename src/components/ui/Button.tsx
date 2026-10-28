@@ -10,8 +10,11 @@ import { cn } from "@/lib/format";
 import { Spinner } from "./icons";
 
 export type ButtonVariant = "primary" | "secondary" | "soft" | "text";
-/** `md` 50px e `lg` 56px; `sm` (44px) é o botão "Personalizar" dos cards. */
-export type ButtonSize = "sm" | "md" | "lg";
+/**
+ * `md` 50px e `lg` 56px (handoff). Extras: `sm` (44px) é o "Personalizar" dos cards;
+ * `field` (46px) acompanha inputs de CEP e cupom.
+ */
+export type ButtonSize = "sm" | "field" | "md" | "lg";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -44,6 +47,7 @@ const variants: Record<ButtonVariant, string> = {
 
 const sizes: Record<ButtonSize, string> = {
   sm: "min-h-11 max-w-full px-[22px] py-2 text-center text-[15px] leading-tight",
+  field: "h-[46px] px-[22px] text-[15px] whitespace-nowrap",
   md: "h-[50px] px-[26px] text-[15px] whitespace-nowrap",
   lg: "h-14 px-7 text-base whitespace-nowrap",
 };

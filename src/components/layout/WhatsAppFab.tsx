@@ -39,6 +39,8 @@ export function WhatsAppFab({
         "flex size-[60px] shrink-0 items-center justify-center rounded-pill bg-primary text-white shadow-fab",
         "transition-colors duration-150 ease-out hover:bg-primary-hover hover:text-white",
         position === "fixed" && "fixed right-4 bottom-4 z-40 md:right-6 md:bottom-6",
+        // Na página de produto o mobile tem a barra fixa de compra embaixo
+        position === "fixed" && pathname.startsWith("/produto/") && "max-md:bottom-24",
       )}
     >
       <ChatIcon size={28} strokeWidth={1.8} />

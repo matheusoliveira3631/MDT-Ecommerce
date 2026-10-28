@@ -17,9 +17,13 @@ export interface Product {
   slug: string;
   nome: string;
   categoria: string;
-  descricao?: string;
-  medidas?: string;
-  fotos: string[];
+  /** Texto curto abaixo do título. */
+  resumo: string;
+  /** Texto completo do acordeão "Descrição". */
+  descricao: string;
+  medidas: string;
+  /** Sem `src`, a foto vira o placeholder de pontos. */
+  fotos: ProductPhoto[];
   /** `null` enquanto o preço não estiver cadastrado. */
   precoBase: number | null;
   precoPix: number | null;
@@ -33,6 +37,18 @@ export interface Product {
   selos: ProductBadge[];
   estoque: number;
   ativo: boolean;
+}
+
+export interface ProductPhoto {
+  src?: string;
+  alt: string;
+}
+
+export interface ShippingOption {
+  servico: string;
+  prazo: string;
+  /** `null` enquanto o valor não vem da transportadora. */
+  valor: number | null;
 }
 
 export interface Category {
@@ -62,6 +78,10 @@ export interface StoreConfig {
   instagram: string;
   cnpj: string;
   meiosPagamento: string[];
+  /** Limite das imagens de referência; `null` enquanto não definido (não valida o tamanho). */
+  referenciaMaxMB: number | null;
+  /** Texto do acordeão "Prazos, entrega e trocas". */
+  politicaEntrega: string;
   /** `null` esconde o banner. */
   bannerSazonal: SeasonalBanner | null;
 }
