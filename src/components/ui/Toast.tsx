@@ -47,7 +47,14 @@ export function Toast({ message, action, onDismiss, duration = 4000, className }
             </Link>
           )}
           {action?.onClick && (
-            <button type="button" onClick={action.onClick} className={cn(actionClass, "cursor-pointer")}>
+            <button
+              type="button"
+              onClick={() => {
+                action.onClick();
+                onDismiss();
+              }}
+              className={cn(actionClass, "cursor-pointer")}
+            >
               {action.label}
             </button>
           )}

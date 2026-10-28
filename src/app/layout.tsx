@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { FavoritesProvider } from "@/components/favorites/FavoritesProvider";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import { WhatsAppFab } from "@/components/layout/WhatsAppFab";
 import { store } from "@/data/mock";
 import { fontVariables } from "./fonts";
@@ -22,11 +24,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={fontVariables}>
       <body>
-        <CartProvider>
-          {children}
-          <CartDrawer />
-          <WhatsAppFab phone={store.whatsapp.numero} message={store.whatsapp.mensagemPadrao} />
-        </CartProvider>
+        <ToastProvider>
+          <CartProvider>
+            <FavoritesProvider>
+              {children}
+              <CartDrawer />
+              <WhatsAppFab phone={store.whatsapp.numero} message={store.whatsapp.mensagemPadrao} />
+            </FavoritesProvider>
+          </CartProvider>
+        </ToastProvider>
       </body>
     </html>
   );

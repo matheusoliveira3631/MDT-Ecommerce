@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CartButton } from "@/components/cart/CartButton";
-import { HeartIcon, LockIcon, SearchIcon, UserIcon } from "@/components/ui/icons";
+import { FavoritesLink } from "@/components/favorites/FavoritesLink";
+import { LockIcon, SearchIcon, UserIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/format";
 import type { Category } from "@/lib/types";
 import { CategoryNav } from "./CategoryNav";
@@ -120,9 +121,7 @@ export function Header(props: HeaderProps) {
           <Link href="/conta" aria-label="Minha conta" className={iconLink}>
             <UserIcon />
           </Link>
-          <Link href="/favoritos" aria-label="Favoritos" className={iconLink}>
-            <HeartIcon />
-          </Link>
+          <FavoritesLink className={iconLink} />
           <CartButton className={iconLink} />
         </div>
       </div>

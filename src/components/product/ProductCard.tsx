@@ -2,17 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useFavorites } from "@/components/favorites/FavoritesProvider";
 import { Badge } from "@/components/ui/Badge";
 import { buttonClasses } from "@/components/ui/Button";
 import { HeartIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/ToastProvider";
 import { formatPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
 export interface ProductCardProps {
   product: Product;
   variant?: "default" | "compact";
-  favorite?: boolean;
   onFavorite?: (product: Product, favorite: boolean) => void;
   /** Use em cards acima da dobra. */
   priority?: boolean;
@@ -40,9 +40,10 @@ function ProductImage({ product, sizes, priority }: { product: Product; sizes: s
   );
 }
 
-export function ProductCard({ product, variant = "default", favorite, onFavorite, priority }: ProductCardProps) {
-  const [localFavorite, setLocalFavorite] = useState(false);
-  const isFavorite = favorite ?? localFavorite;
+export function ProductCard({ product, variant = "default", onFavorite, priority }: ProductCardProps) {
+  const favorites = useFavorites();
+  const showToast = useToast();
+  const isFavorite = favorites.isFavorite(product.slug);
   const href = `/produto/${product.slug}`;
   const soldOut = !product.ativo || product.estoque <= 0;
   const selo = soldOut ? { tipo: "soldout" as const } : product.selos[0];
@@ -54,8 +55,12 @@ export function ProductCard({ product, variant = "default", favorite, onFavorite
   );
 
   function toggleFavorite() {
-    const next = !isFavorite;
-    setLocalFavorite(next);
+    const next = favorites.toggle(product.slug);
+    showToast(
+      next
+        ? { message: "Salvo nos favoritos", action: { label: "Ver favoritos", href: "/favoritos" } }
+        : { message: "Removido dos favoritos" },
+    );
     onFavorite?.(product, next);
   }
 
@@ -110,7 +115,10 @@ export function ProductCard({ product, variant = "default", favorite, onFavorite
         </Link>
         {price}
       </div>
-      <Link href={href} className={buttonClasses({ variant: "secondary", size: "sm", className: "self-start" })}>
+      <Link
+        href={soldOut ? `${href}#avise-me` : href}
+        className={buttonClasses({ variant: "secondary", size: "sm", className: "self-start" })}
+      >
         {soldOut ? "Avise-me quando voltar" : "Personalizar"}
       </Link>
     </article>

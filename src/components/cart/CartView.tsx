@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { ShippingCalculator } from "@/components/product/ShippingCalculator";
 import { buttonClasses } from "@/components/ui/Button";
 import { BagIcon, ChatIcon } from "@/components/ui/icons";
-import { Toast } from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/ToastProvider";
 import { calculateShippingMock, getProduct, validateCouponMock } from "@/data/mock";
-import { orderTotals, type CartLine } from "@/lib/cart";
+import { orderTotals } from "@/lib/cart";
 import { pluralItens } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
 import { CartLineItem } from "./CartLineItem";
@@ -68,37 +68,17 @@ function CartSkeleton() {
 export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewProps) {
   const { lines, hydrated, updateLine, removeLine, restoreLine, coupon, setCoupon } = useCart();
   const [shipping, setShipping] = useState<ShippingOption | null>(null);
-  const [removed, setRemoved] = useState<{ line: CartLine; index: number } | null>(null);
-  const dismissToast = useCallback(() => setRemoved(null), []);
+  const showToast = useToast();
 
   if (!hydrated) return <CartSkeleton />;
 
   const totals = orderTotals(lines, getProduct, shipping, coupon);
 
-  const toast = (
-    <Toast
-      message={removed ? "Item removido" : null}
-      action={
-        removed
-          ? {
-              label: "Desfazer",
-              onClick: () => {
-                restoreLine(removed.line, removed.index);
-                setRemoved(null);
-              },
-            }
-          : undefined
-      }
-      onDismiss={dismissToast}
-      duration={5000}
-    />
-  );
 
   if (lines.length === 0) {
     return (
       <>
         <EmptyCart />
-        {toast}
       </>
     );
   }
@@ -119,7 +99,15 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
                   line={line}
                   product={getProduct(line.produtoSlug)}
                   onQty={(quantidade) => updateLine(line.id, { quantidade })}
-                  onRemove={() => setRemoved(removeLine(line.id))}
+                  onRemove={() => {
+                    const removed = removeLine(line.id);
+                    if (!removed) return;
+                    showToast({
+                      message: "Item removido",
+                      action: { label: "Desfazer", onClick: () => restoreLine(removed.line, removed.index) },
+                      duration: 5000,
+                    });
+                  }}
                   editHref={`/produto/${line.produtoSlug}?editar=${line.id}`}
                 />
               </li>
@@ -166,7 +154,6 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           />
         </OrderSummary>
       </div>
-      {toast}
     </>
   );
 }

@@ -195,6 +195,19 @@ export async function createOrderMock(input: Omit<Order, "numero" | "status" | "
   return { ...input, numero: "[0000]", status: "aguardando_arte", criadoEm: new Date().toISOString() };
 }
 
+/** Simula a inscrição na newsletter (ferramenta de e-mail a definir). */
+export async function subscribeNewsletterMock(email: string): Promise<void> {
+  void email;
+  await new Promise((resolve) => setTimeout(resolve, 600));
+}
+
+/** Simula o "Avise-me quando voltar" de um produto esgotado. */
+export async function subscribeRestockMock(slug: string, email: string): Promise<void> {
+  void slug;
+  void email;
+  await new Promise((resolve) => setTimeout(resolve, 600));
+}
+
 /** Simula a cotação de frete (Melhor Envio ou Correios, a definir). */
 export async function calculateShippingMock(cep: string): Promise<ShippingOption[]> {
   await new Promise((resolve) => setTimeout(resolve, 700));

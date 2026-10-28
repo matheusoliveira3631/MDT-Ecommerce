@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useId, useRef, useState, type ReactNode } from "react";
+import { Suspense, useId, useRef, useState, type ReactNode } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { ColorSwatches } from "@/components/ui/ColorSwatches";
@@ -10,12 +10,13 @@ import { BagIcon, ChatIcon, PencilIcon } from "@/components/ui/icons";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { TextArea, TextField } from "@/components/ui/TextField";
 import { ThemeChips } from "@/components/ui/ThemeChips";
-import { Toast } from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/ToastProvider";
 import { calculateShippingMock } from "@/data/mock";
 import { OTHER_THEME, type CartLine, type Personalizacao } from "@/lib/cart";
 import { formatPrice } from "@/lib/format";
 import { whatsappHref } from "@/lib/whatsapp";
 import type { Product } from "@/lib/types";
+import { NotifyMeForm } from "./NotifyMeForm";
 import { ShippingCalculator } from "./ShippingCalculator";
 
 export interface ProductFormProps {
@@ -84,8 +85,7 @@ function ProductFormFields({
   const [cor, setCor] = useState(initial?.cor ?? product.cores[0]?.nome ?? "");
   const [quantidade, setQuantidade] = useState(editLine?.quantidade ?? product.pedidoMinimo);
   const [errors, setErrors] = useState<Errors>({});
-  const [toast, setToast] = useState<string | null>(null);
-  const dismissToast = useCallback(() => setToast(null), []);
+  const showToast = useToast();
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -124,7 +124,7 @@ function ProductFormFields({
     if (window.matchMedia("(min-width: 1024px)").matches) {
       openDrawer(e.nativeEvent instanceof SubmitEvent ? (e.nativeEvent.submitter as HTMLElement | null) : null);
     } else {
-      setToast(`Adicionado à sacola: ${product.nome}`);
+      showToast({ message: `Adicionado à sacola: ${product.nome}`, action: { label: "Ver sacola", href: "/sacola" } });
     }
   }
 
@@ -208,11 +208,7 @@ function ProductFormFields({
           defaultValue={initial?.observacoes}
         />
 
-        {soldOut ? (
-          <Button variant="secondary" size="lg" fullWidth>
-            Avise-me quando voltar
-          </Button>
-        ) : (
+        {!soldOut && (
           <div className="flex flex-wrap items-stretch gap-3">
             <QuantityStepper value={quantidade} onChange={setQuantidade} min={product.pedidoMinimo} size="lg" />
             <Button type="submit" size="lg" icon={<BagIcon size={20} strokeWidth={1.8} />} className="flex-[1_1_220px]">
@@ -221,6 +217,8 @@ function ProductFormFields({
           </div>
         )}
       </form>
+
+      {soldOut && <NotifyMeForm product={product} />}
 
       <a
         href={whatsappHref(whatsapp, `Olá! Tenho uma dúvida sobre o produto ${product.nome}.`)}
@@ -258,12 +256,6 @@ function ProductFormFields({
         </div>
       )}
 
-      <Toast
-        message={toast}
-        action={{ label: "Ver sacola", href: "/sacola" }}
-        onDismiss={dismissToast}
-        className="max-md:bottom-24"
-      />
     </>
   );
 }

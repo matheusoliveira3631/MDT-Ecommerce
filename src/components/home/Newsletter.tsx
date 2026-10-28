@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { subscribeNewsletterMock } from "@/data/mock";
 import { cn } from "@/lib/format";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface NewsletterProps {
-  /** Integração com a ferramenta de e-mail; ainda não definida. */
+  /** Integração com a ferramenta de e-mail (por enquanto, simulada). */
   onSubscribe?: (email: string) => Promise<void>;
 }
 
-export function Newsletter({ onSubscribe }: NewsletterProps) {
+export function Newsletter({ onSubscribe = subscribeNewsletterMock }: NewsletterProps) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string>();
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
@@ -25,7 +26,7 @@ export function Newsletter({ onSubscribe }: NewsletterProps) {
     }
     setError(undefined);
     setStatus("loading");
-    await onSubscribe?.(email.trim());
+    await onSubscribe(email.trim());
     setStatus("done");
   }
 
