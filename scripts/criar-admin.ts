@@ -2,6 +2,7 @@
  * Cria um usuário admin (ou promove um existente e troca a senha).
  * Uso no servidor:
  *   npm run admin:criar -- email@dominio.com "Nome Completo"
+ * Com --cliente cria (ou rebaixa para) um usuário comum, útil para testes.
  * A senha é pedida no terminal (ou vem de ADMIN_SENHA, para automação).
  */
 import readline from "node:readline";
@@ -27,7 +28,9 @@ function askHidden(question: string): Promise<string> {
 }
 
 async function main() {
-  const [emailArg, ...nomeParts] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const papel = args.includes("--cliente") ? "cliente" : "admin";
+  const [emailArg, ...nomeParts] = args.filter((a) => a !== "--cliente");
   const email = emailArg?.trim().toLowerCase();
   const nome = nomeParts.join(" ").trim();
   if (!email || !email.includes("@") || !nome) {
@@ -45,11 +48,11 @@ async function main() {
   const senhaHash = await hashPassword(senha);
   const existing = db.select({ id: usuarios.id }).from(usuarios).where(eq(usuarios.email, email)).get();
   if (existing) {
-    db.update(usuarios).set({ nome, senhaHash, papel: "admin" }).where(eq(usuarios.id, existing.id)).run();
-    console.log(`${email} agora é admin (senha atualizada).`);
+    db.update(usuarios).set({ nome, senhaHash, papel }).where(eq(usuarios.id, existing.id)).run();
+    console.log(`${email} atualizado (papel: ${papel}, senha nova).`);
   } else {
-    db.insert(usuarios).values({ email, nome, senhaHash, papel: "admin" }).run();
-    console.log(`Admin ${email} criado.`);
+    db.insert(usuarios).values({ email, nome, senhaHash, papel }).run();
+    console.log(`Usuário ${email} criado (papel: ${papel}).`);
   }
 }
 

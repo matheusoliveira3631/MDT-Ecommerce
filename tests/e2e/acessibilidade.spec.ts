@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { addToCart } from "./helpers";
+import { TEST_USERS } from "../../playwright.config";
+import { addToCart, loginAs } from "./helpers";
 
 const PAGES = [
   "/",
@@ -15,6 +16,7 @@ const PAGES = [
   "/ajuda/perguntas-frequentes",
   "/privacidade",
   "/pagina-x",
+  "/entrar",
 ];
 
 async function scan(page: import("@playwright/test").Page) {
@@ -32,6 +34,16 @@ for (const path of PAGES) {
 test("WCAG 2.1 AA sem violações: sacola com itens e checkout", async ({ page }) => {
   await addToCart(page, "Helena");
   for (const path of ["/sacola", "/checkout/identificacao"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(await scan(page), path).toEqual([]);
+  }
+});
+
+test("WCAG 2.1 AA sem violações: conta e painel do admin", async ({ page }) => {
+  await loginAs(page, TEST_USERS.admin);
+  expect(await scan(page), "/conta").toEqual([]);
+  for (const path of ["/admin/produtos", "/admin/produtos/novo", "/admin/categorias", "/admin/produtos/1"]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(await scan(page), path).toEqual([]);

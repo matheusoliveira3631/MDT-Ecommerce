@@ -43,6 +43,35 @@ export function isValidCpf(value: string): boolean {
   return check(9) === Number(d[9]) && check(10) === Number(d[10]);
 }
 
+/** "Caixa Milk Café!" → "caixa-milk-cafe" */
+export function slugify(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120);
+}
+
+/**
+ * Converte o que a pessoa digita ("12", "12,5", "1.234,56", "R$ 12,50") em centavos.
+ * Vazio → null (preço ainda não cadastrado). Inválido → NaN.
+ */
+export function parseBRLToCents(input: string): number | null {
+  const text = input.replace(/R\$|\s/g, "");
+  if (!text) return null;
+  if (!/^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(text)) return NaN;
+  const [reais, centavos = ""] = text.replace(/\./g, "").split(",");
+  return Number(reais) * 100 + Number(centavos.padEnd(2, "0"));
+}
+
+/** 1250 → "12,50" (para preencher o campo de preço). */
+export function centsToInput(cents: number | null): string {
+  if (cents == null) return "";
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 /** "1 item" / "2 itens" */
 export function pluralItens(count: number): string {
   return `${count} ${count === 1 ? "item" : "itens"}`;

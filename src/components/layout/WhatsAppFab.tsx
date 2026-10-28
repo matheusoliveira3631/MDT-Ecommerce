@@ -19,7 +19,7 @@ export interface WhatsAppFabProps {
 export function WhatsAppFab({
   phone,
   message,
-  hiddenOn = ["/sacola", "/checkout"],
+  hiddenOn = ["/sacola", "/checkout", "/admin"],
   position = "fixed",
 }: WhatsAppFabProps) {
   const pathname = usePathname();

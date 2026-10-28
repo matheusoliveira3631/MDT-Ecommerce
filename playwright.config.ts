@@ -3,6 +3,11 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.PORT ?? 3200);
 const baseURL = `http://localhost:${PORT}`;
 export const TEST_DATA = "./data/test";
+/** Usuários criados no banco de testes antes de subir o servidor. */
+export const TEST_USERS = {
+  admin: { email: "admin@teste.com", senha: "senha-do-admin-123" },
+  cliente: { email: "cliente@teste.com", senha: "senha-da-cliente-123" },
+};
 
 /**
  * Testes unitários (sem navegador) e ponta a ponta no build de produção.
@@ -37,7 +42,14 @@ export default defineConfig({
   ],
   webServer: {
     // Banco e uploads só dos testes, recriados a cada execução a partir do catálogo inicial
-    command: `rm -rf ${TEST_DATA} && npm run db:seed && npm run build && npm run start -- --port ${PORT}`,
+    command: [
+      `rm -rf ${TEST_DATA}`,
+      "npm run db:seed",
+      `ADMIN_SENHA=${TEST_USERS.admin.senha} npm run admin:criar -- ${TEST_USERS.admin.email} "Admin Teste"`,
+      `ADMIN_SENHA=${TEST_USERS.cliente.senha} npm run admin:criar -- --cliente ${TEST_USERS.cliente.email} "Cliente Teste"`,
+      "npm run build",
+      `npm run start -- --port ${PORT}`,
+    ].join(" && "),
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

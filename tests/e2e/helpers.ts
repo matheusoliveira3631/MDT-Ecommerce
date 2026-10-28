@@ -30,3 +30,11 @@ export async function fillIdentification(page: Page) {
 }
 
 export const cartLabel = (page: Page) => page.locator('header a[href="/sacola"]');
+
+export async function loginAs(page: Page, user: { email: string; senha: string }, voltar = "/conta") {
+  await page.goto(`/entrar?voltar=${encodeURIComponent(voltar)}`);
+  await page.getByLabel("E-mail").fill(user.email);
+  await page.getByLabel("Senha").fill(user.senha);
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForURL((url) => url.pathname === voltar);
+}
