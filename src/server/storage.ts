@@ -60,7 +60,18 @@ export async function createUpload(input: {
       ContentLength: input.tamanho,
       CacheControl: CACHE_CONTROL,
     });
-    const url = await getSignedUrl(s3, command, { expiresIn: 300 });
+    let url: string;
+    try {
+      url = await getSignedUrl(s3, command, { expiresIn: 300 });
+    } catch (error) {
+      console.error("S3: não foi possível assinar o upload", error);
+      if (error instanceof Error && error.name === "CredentialsProviderError") {
+        throw new Error(
+          "O servidor não tem credenciais da AWS para enviar ao S3. Rode “npm run s3:testar” no servidor para ver o que falta.",
+        );
+      }
+      throw new Error("Não foi possível preparar o envio da foto. Tente de novo.");
+    }
     return {
       chave,
       url,

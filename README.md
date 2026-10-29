@@ -61,6 +61,8 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d seudominio.com.br -d www.seudominio.com.br   # HTTPS (o cookie de sessão exige)
 ```
 
+Para conferir o S3 (credencial, permissão de gravar, leitura pública e CORS), rode `npm run s3:testar` em `/srv/mimos`: ele envia uma imagem de teste, apaga em seguida e diz o que falta em cada etapa.
+
 ### 3. Backup do banco (Litestream)
 
 Instale o Litestream (pacote `.deb` em https://litestream.io/install/), copie `deploy/litestream.yml` para `/etc/litestream.yml` e `deploy/litestream.service` para `/etc/systemd/system/`, e rode `sudo systemctl enable --now litestream`.
