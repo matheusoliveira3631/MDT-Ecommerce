@@ -8,7 +8,7 @@ import { computeTotals, type CouponRule } from "@/lib/pricing";
 import type { Database } from "./db/connect";
 import { pedidoHistorico, pedidoItens, pedidos, produtos, type PedidoRow } from "./db/schema";
 import type { Charge, ChargeRequest } from "./payments";
-import type { ShippingQuote } from "./shipping";
+import type { ShippingItem, ShippingQuote } from "./shipping";
 
 /*
  * Fechamento do pedido no servidor. O navegador manda só intenções (o que
@@ -18,7 +18,7 @@ import type { ShippingQuote } from "./shipping";
  */
 
 export interface OrderDeps {
-  quoteShipping: (cep: string) => Promise<ShippingQuote[]>;
+  quoteShipping: (cep: string, itens: ShippingItem[]) => Promise<ShippingQuote[]>;
   findCoupon: (code: string) => CouponRule | null;
   createCharge: (request: ChargeRequest) => Promise<Charge>;
 }
@@ -131,7 +131,17 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
     }
 
     // Frete e cupom recalculados aqui, não aceitos do navegador
-    const frete = (await deps.quoteShipping(input.endereco.cep)).find((q) => q.servico === input.freteServico);
+    let quotes: ShippingQuote[];
+    try {
+      quotes = await deps.quoteShipping(
+        input.endereco.cep,
+        input.itens.map((i) => ({ slug: i.produtoSlug, quantidade: i.quantidade })),
+      );
+    } catch (error) {
+      console.error("Falha ao cotar o frete", error);
+      throw new OrderError("Não conseguimos calcular o frete agora. Tente de novo em instantes.");
+    }
+    const frete = quotes.find((q) => q.servico === input.freteServico);
     if (!frete) throw new OrderError("Esse frete não está disponível para o CEP. Escolha de novo.");
     if (frete.valorCentavos == null) throw new OrderError("O valor do frete para esse CEP ainda não está disponível.");
 

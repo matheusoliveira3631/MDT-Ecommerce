@@ -7,9 +7,9 @@ import { deleteProductAction, saveProductAction } from "@/app/admin/actions";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { TextArea, TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/ToastProvider";
-import { centsToInput, parseBRLToCents, slugify } from "@/lib/format";
+import { centsToInput, maskBRL, parseBRLToCents, slugify } from "@/lib/format";
 import type { BadgeVariant, ProductColor } from "@/lib/types";
-import { Checkbox, FormSection, SelectField } from "./fields";
+import { Checkbox, FormSection, SelectField, TagsInput } from "./fields";
 import { PhotoUploader, type UploadedPhoto } from "./PhotoUploader";
 
 export interface ProductEditorInitial {
@@ -26,6 +26,10 @@ export interface ProductEditorInitial {
   pedidoMinimo: number;
   prazoProducaoDias: number | null;
   estoque: number;
+  pesoGramas: number | null;
+  alturaCm: number | null;
+  larguraCm: number | null;
+  comprimentoCm: number | null;
   temas: string[];
   cores: ProductColor[];
   aceitaReferencia: boolean;
@@ -44,7 +48,7 @@ const EDITABLE_BADGES: Array<{ tipo: "customizable" | "bestseller" | "new"; labe
 /** Ordem dos campos na tela: o foco vai para o primeiro com erro. */
 const FIELD_ORDER = [
   "nome", "slug", "categoriaId", "resumo", "descricao", "medidas", "precoBaseCentavos", "precoPixCentavos",
-  "pedidoMinimo", "prazoProducaoDias", "estoque", "temas", "cores", "selos", "fotos",
+  "pedidoMinimo", "prazoProducaoDias", "estoque", "pesoGramas", "alturaCm", "larguraCm", "comprimentoCm", "temas", "cores", "selos", "fotos",
 ];
 
 const toInt = (value: string): number | null => (value.trim() === "" ? null : Number(value));
@@ -74,7 +78,12 @@ export function ProductEditor({
   const [pedidoMinimo, setPedidoMinimo] = useState(String(initial.pedidoMinimo));
   const [prazo, setPrazo] = useState(initial.prazoProducaoDias == null ? "" : String(initial.prazoProducaoDias));
   const [estoque, setEstoque] = useState(String(initial.estoque));
-  const [temas, setTemas] = useState(initial.temas.join("\n"));
+  const numberText = (n: number | null) => (n == null ? "" : String(n));
+  const [peso, setPeso] = useState(numberText(initial.pesoGramas));
+  const [altura, setAltura] = useState(numberText(initial.alturaCm));
+  const [largura, setLargura] = useState(numberText(initial.larguraCm));
+  const [comprimento, setComprimento] = useState(numberText(initial.comprimentoCm));
+  const [temas, setTemas] = useState<string[]>(initial.temas);
   const [cores, setCores] = useState<ProductColor[]>(initial.cores);
   const [aceitaReferencia, setAceitaReferencia] = useState(initial.aceitaReferencia);
   const [selos, setSelos] = useState(initial.selos.filter((s) => s.tipo !== "soldout"));
@@ -128,7 +137,11 @@ export function ProductEditor({
       pedidoMinimo: toInt(pedidoMinimo) ?? 1,
       prazoProducaoDias: toInt(prazo),
       estoque: toInt(estoque) ?? 0,
-      temas: temas.split("\n").map((t) => t.trim()).filter(Boolean),
+      pesoGramas: toInt(peso),
+      alturaCm: toInt(altura),
+      larguraCm: toInt(largura),
+      comprimentoCm: toInt(comprimento),
+      temas,
       cores,
       aceitaReferencia,
       selos,
@@ -144,8 +157,8 @@ export function ProductEditor({
       return;
     }
     setErrors({});
-    showToast({ message: "Produto salvo", action: ativo ? { label: "Ver na loja", href: `/produto/${result.slug}` } : undefined });
-    if (isNew) router.replace(`/admin/produtos/${result.id}`);
+    showToast({ message: isNew ? "Produto cadastrado" : "Produto salvo", action: ativo ? { label: "Ver na loja", href: `/produto/${result.slug}` } : undefined });
+    if (isNew) router.push("/admin/produtos");
     else router.refresh();
   }
 
@@ -234,10 +247,10 @@ export function ProductEditor({
       <FormSection title="Preço e pedido" description="Deixe o preço vazio enquanto não estiver definido: a loja mostra “R$ [preço]”.">
         <div className="grid gap-4 sm:grid-cols-2">
           <div data-field="precoBaseCentavos">
-            <TextField label="Preço (R$)" inputMode="decimal" placeholder="0,00" value={precoBase} onChange={(e) => setPrecoBase(e.target.value)} error={errors.precoBaseCentavos} />
+            <TextField label="Preço (R$)" inputMode="numeric" placeholder="0,00" value={precoBase} onChange={(e) => setPrecoBase(maskBRL(e.target.value))} error={errors.precoBaseCentavos} />
           </div>
           <div data-field="precoPixCentavos">
-            <TextField label="Preço no Pix (R$)" inputMode="decimal" placeholder="0,00" value={precoPix} onChange={(e) => setPrecoPix(e.target.value)} error={errors.precoPixCentavos} />
+            <TextField label="Preço no Pix (R$)" inputMode="numeric" placeholder="0,00" value={precoPix} onChange={(e) => setPrecoPix(maskBRL(e.target.value))} error={errors.precoPixCentavos} />
           </div>
         </div>
         <Checkbox label="Mostrar “a partir de”" hint="Quando o preço muda com a quantidade ou as opções." checked={precoVaria} onChange={setPrecoVaria} />
@@ -254,14 +267,35 @@ export function ProductEditor({
         </div>
       </FormSection>
 
+      <FormSection
+        title="Embalagem para o frete"
+        description="Peso e medidas de uma unidade já embalada. O frete é calculado com eles a partir do CEP da loja; vazio usa 200 g e 16 × 11 × 2 cm."
+      >
+        <div className="grid gap-4 sm:grid-cols-4">
+          <div data-field="pesoGramas">
+            <TextField label="Peso (g)" type="number" min={1} inputMode="numeric" value={peso} onChange={(e) => setPeso(e.target.value)} error={errors.pesoGramas} />
+          </div>
+          <div data-field="comprimentoCm">
+            <TextField label="Comprimento (cm)" type="number" min={1} inputMode="numeric" value={comprimento} onChange={(e) => setComprimento(e.target.value)} error={errors.comprimentoCm} />
+          </div>
+          <div data-field="larguraCm">
+            <TextField label="Largura (cm)" type="number" min={1} inputMode="numeric" value={largura} onChange={(e) => setLargura(e.target.value)} error={errors.larguraCm} />
+          </div>
+          <div data-field="alturaCm">
+            <TextField label="Altura (cm)" type="number" min={1} inputMode="numeric" value={altura} onChange={(e) => setAltura(e.target.value)} error={errors.alturaCm} />
+          </div>
+        </div>
+      </FormSection>
+
       <FormSection title="Personalização">
         <div data-field="temas">
-          <TextArea
+          <TagsInput
             label="Temas"
-            hint="Um por linha. “Outro tema” entra sozinho no fim."
-            rows={5}
+            itemLabel="tema"
+            hint="Digite e clique em + (ou Enter). “Outro tema” entra sozinho no fim."
+            placeholder="Ex.: Safari"
             value={temas}
-            onChange={(e) => setTemas(e.target.value)}
+            onChange={setTemas}
             error={errors.temas}
           />
         </div>

@@ -3,7 +3,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { CheckIcon, ImageIcon } from "@/components/ui/icons";
 import { Photo } from "@/components/ui/Photo";
 
-export function Hero({ image }: { image?: string }) {
+export function Hero({ image, alt = "Mesa de festa com os produtos personalizados" }: { image?: string; alt?: string }) {
   return (
     <section aria-labelledby="hero-title" className="bg-rose-50">
       <div className="container-page grid items-center gap-10 py-section-sm md:py-section lg:grid-cols-2 lg:gap-14">
@@ -32,7 +32,7 @@ export function Hero({ image }: { image?: string }) {
         <div className="flex flex-col gap-4 lg:relative">
           <Photo
             src={image}
-            alt="Mesa de festa com os produtos personalizados"
+            alt={alt}
             sizes="(min-width: 1024px) 580px, 100vw"
             priority
             className="aspect-[5/4] rounded-xl border-8 border-white"

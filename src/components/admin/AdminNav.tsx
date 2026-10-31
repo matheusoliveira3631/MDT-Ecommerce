@@ -8,6 +8,7 @@ const links = [
   { label: "Pedidos", href: "/admin/pedidos" },
   { label: "Produtos", href: "/admin/produtos" },
   { label: "Categorias", href: "/admin/categorias" },
+  { label: "Página inicial", href: "/admin/loja" },
 ];
 
 /** `pendentes`: pedidos pagos esperando a arte, mostrados ao lado de "Pedidos". */
@@ -15,7 +16,7 @@ export function AdminNav({ pendentes = 0 }: { pendentes?: number }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Painel" className="mx-auto max-w-[1240px] px-4 md:px-6">
-      <ul className="m-0 flex list-none gap-1 p-0">
+      <ul className="m-0 flex list-none gap-1 overflow-x-auto p-0">
         {links.map((link) => {
           const current = pathname.startsWith(link.href);
           return (
@@ -24,7 +25,7 @@ export function AdminNav({ pendentes = 0 }: { pendentes?: number }) {
                 href={link.href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 items-center border-b-2 px-3 font-heading text-nav no-underline",
+                  "flex min-h-11 items-center border-b-2 px-3 font-heading text-nav whitespace-nowrap no-underline",
                   current ? "border-primary text-primary" : "border-transparent text-ink hover:text-primary",
                 )}
               >

@@ -124,6 +124,27 @@ test("webhook: aprovado libera a arte; expirado cancela uma vez só; recusa depo
   expect(estoque("caixa-milk-personalizada")).toBe(60);
 });
 
+test("o frete é cotado com os itens do pedido; transportadora fora do ar não fecha o pedido", async () => {
+  let itensCotados: unknown;
+  const result = await createOrder(
+    db,
+    input(),
+    deps({
+      quoteShipping: async (_cep, itens) => {
+        itensCotados = itens;
+        return [{ servico: "PAC", prazo: "8 dias úteis", valorCentavos: 2590 }];
+      },
+    }),
+  );
+  expect(result.ok).toBe(true);
+  expect(itensCotados).toEqual([{ slug: "caixa-milk-personalizada", quantidade: 20 }]);
+
+  db.update(produtos).set({ estoque: 30 }).where(eq(produtos.slug, "caixa-milk-personalizada")).run();
+  const offline = await createOrder(db, input(), deps({ quoteShipping: async () => Promise.reject(new Error("timeout")) }));
+  expect(offline).toEqual({ ok: false, error: "Não conseguimos calcular o frete agora. Tente de novo em instantes." });
+  expect(estoque("caixa-milk-personalizada")).toBe(30);
+});
+
 test("a confirmação exige o token do pedido", async () => {
   const result = await createOrder(db, input(), deps());
   if (!result.ok) throw new Error(result.error);

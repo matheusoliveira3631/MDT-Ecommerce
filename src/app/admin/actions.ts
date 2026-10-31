@@ -11,7 +11,8 @@ import {
   saveProduct,
   type SaveResult,
 } from "@/server/admin-catalog";
-import { createUpload, type UploadTicket } from "@/server/storage";
+import { saveHomeSettings, type SettingsResult } from "@/server/settings";
+import { createUpload, UPLOAD_FOLDERS, type UploadFolder, type UploadTicket } from "@/server/storage";
 
 /*
  * Toda ação aqui confere de novo se quem chama é admin: esconder a página não
@@ -55,14 +56,21 @@ export async function deleteCategoryAction(id: number): Promise<{ ok: true } | A
 
 /** Pede o destino de upload de uma foto (URL pré-assinada do S3 ou a rota local). */
 export async function requestUploadAction(input: {
-  pasta: "produtos" | "categorias";
+  pasta: UploadFolder;
   contentType: string;
   tamanho: number;
 }): Promise<{ ok: true; ticket: UploadTicket } | ActionError> {
   return guarded(async () => {
-    if (input.pasta !== "produtos" && input.pasta !== "categorias") throw new Error("Pasta inválida.");
+    if (!UPLOAD_FOLDERS.includes(input.pasta)) throw new Error("Pasta inválida.");
     return { ok: true as const, ticket: await createUpload(input) };
   });
+}
+
+/** Foto principal da página inicial. */
+export async function saveHomeSettingsAction(input: unknown): Promise<SettingsResult | ActionError> {
+  const result = await guarded(() => saveHomeSettings(input));
+  if (result.ok) revalidatePath("/");
+  return result;
 }
 
 /** Avança (ou corrige) o status de um pedido pago; o histórico guarda quem mudou. */

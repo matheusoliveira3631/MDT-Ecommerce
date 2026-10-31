@@ -15,8 +15,11 @@ export const IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/web
 export type ImageType = keyof typeof IMAGE_TYPES;
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
-/** Chaves válidas: "produtos/<uuid>.jpg". Bloqueia "../" e afins. */
-export const KEY_PATTERN = /^(produtos|categorias)\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
+/** Chaves válidas: "produtos/<uuid>.jpg" (ou categorias/, loja/). Bloqueia "../" e afins. */
+export const KEY_PATTERN = /^(produtos|categorias|loja)\/[0-9a-f-]{36}\.(jpg|png|webp)$/;
+
+export const UPLOAD_FOLDERS = ["produtos", "categorias", "loja"] as const;
+export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
 
 export interface UploadTicket {
   chave: string;
@@ -43,7 +46,7 @@ export function publicUrl(chave: string): string {
 
 /** Gera a chave e o destino do upload. O chamador já verificou que o usuário é admin. */
 export async function createUpload(input: {
-  pasta: "produtos" | "categorias";
+  pasta: UploadFolder;
   contentType: string;
   tamanho: number;
 }): Promise<UploadTicket> {

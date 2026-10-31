@@ -15,7 +15,7 @@ const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export interface PhotoUploaderProps {
-  pasta: "produtos" | "categorias";
+  pasta: "produtos" | "categorias" | "loja";
   value: UploadedPhoto[];
   onChange: (photos: UploadedPhoto[]) => void;
   /** 1 = foto única (categoria). */

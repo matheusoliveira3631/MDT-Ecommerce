@@ -53,10 +53,18 @@ export default async function ProductPage({ params }: PageProps) {
           current={product.nome}
         />
 
-        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
-          <ProductGallery photos={product.fotos} productName={product.nome} />
+        {/*
+          Desktop: fotos e detalhes na coluna da esquerda, dados e frete na da direita.
+          A segunda linha é 1fr: se a coluna da direita for mais alta, o espaço extra
+          fica abaixo dos detalhes, que continuam colados nas fotos.
+          Mobile: fotos, dados e frete, detalhes.
+        */}
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:gap-y-8">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+            <ProductGallery photos={product.fotos} productName={product.nome} />
+          </div>
 
-          <div className="flex min-w-0 flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <div className="flex flex-col items-start gap-2.5">
               {selo && <Badge variant={selo.tipo} label={selo.label} />}
               <h1 className="m-0 text-h1-sm md:text-h1">{product.nome}</h1>
@@ -83,26 +91,26 @@ export default async function ProductPage({ params }: PageProps) {
               referenciaMaxMB={store.referenciaMaxMB}
             />
           </div>
-        </div>
 
-        <section aria-label="Detalhes do produto" className="mt-section-sm max-w-[860px] md:mt-section">
-          <Accordion
-            items={[
-              { title: "Descrição", content: <p className="m-0">{product.descricao}</p> },
-              { title: "Medidas e material", content: <p className="m-0">{product.medidas}</p> },
-              {
-                title: "Como funciona a personalização",
-                content: (
-                  <p className="m-0">
-                    Depois do pagamento, enviamos a arte pelo WhatsApp para você aprovar. Ajustes de texto e cor estão
-                    incluídos; a produção começa só depois do seu ok.
-                  </p>
-                ),
-              },
-              { title: "Prazos, entrega e trocas", content: <p className="m-0">{store.politicaEntrega}</p> },
-            ]}
-          />
-        </section>
+          <section aria-label="Detalhes do produto" className="min-w-0 lg:col-start-1 lg:row-start-2">
+            <Accordion
+              items={[
+                { title: "Descrição", content: <p className="m-0">{product.descricao}</p> },
+                { title: "Medidas e material", content: <p className="m-0">{product.medidas}</p> },
+                {
+                  title: "Como funciona a personalização",
+                  content: (
+                    <p className="m-0">
+                      Depois do pagamento, enviamos a arte pelo WhatsApp para você aprovar. Ajustes de texto e cor estão
+                      incluídos; a produção começa só depois do seu ok.
+                    </p>
+                  ),
+                },
+                { title: "Prazos, entrega e trocas", content: <p className="m-0">{store.politicaEntrega}</p> },
+              ]}
+            />
+          </section>
+        </div>
 
         {related.length > 0 && (
           <section aria-labelledby="relacionados-title" className="mt-section-sm md:mt-20">

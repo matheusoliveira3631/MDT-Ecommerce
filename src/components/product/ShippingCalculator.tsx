@@ -3,10 +3,10 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn, formatPrice, maskCep } from "@/lib/format";
-import type { ShippingOption } from "@/lib/types";
+import type { ShippingOption, ShippingResult } from "@/lib/types";
 
 export interface ShippingCalculatorProps {
-  onCalculate: (cep: string) => Promise<ShippingOption[]>;
+  onCalculate: (cep: string) => Promise<ShippingResult>;
   /** Chamado com a opção escolhida (ou `null` quando o CEP muda ou dá erro). */
   onSelect?: (option: ShippingOption | null) => void;
   label?: string;
@@ -39,14 +39,14 @@ export function ShippingCalculator({
     setLoading(true);
     try {
       const result = await onCalculate(digits);
-      if (result.length === 0) {
-        setError("Não encontramos esse CEP.");
+      if (!result.ok) {
+        setError(result.erro);
         setOptions(null);
         onSelect?.(null);
       } else {
-        setOptions(result);
-        setChosen(result[0].servico);
-        onSelect?.(result[0]);
+        setOptions(result.opcoes);
+        setChosen(result.opcoes[0].servico);
+        onSelect?.(result.opcoes[0]);
       }
     } finally {
       setLoading(false);

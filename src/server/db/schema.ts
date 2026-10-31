@@ -42,6 +42,11 @@ export const produtos = sqliteTable(
     aceitaReferencia: integer("aceita_referencia", { mode: "boolean" }).notNull().default(true),
     selos: text("selos", { mode: "json" }).$type<ProductBadge[]>().notNull().default(sql`'[]'`),
     estoque: integer("estoque").notNull().default(0),
+    /** Embalagem de uma unidade, para a cotação do frete; vazio usa o pacote padrão. */
+    pesoGramas: integer("peso_gramas"),
+    alturaCm: integer("altura_cm"),
+    larguraCm: integer("largura_cm"),
+    comprimentoCm: integer("comprimento_cm"),
     ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
     /** Aparece na vitrine "Mais vendidos" da página inicial. */
     destaque: integer("destaque", { mode: "boolean" }).notNull().default(false),
@@ -90,6 +95,15 @@ export const sessoes = sqliteTable(
   },
   (t) => [index("sessoes_usuario_idx").on(t.usuarioId)],
 );
+
+/** Ajustes da loja editáveis no painel (chave → valor JSON), ex.: a foto principal da página inicial. */
+export const configuracoes = sqliteTable("configuracoes", {
+  chave: text("chave").primaryKey(),
+  valor: text("valor", { mode: "json" }).$type<unknown>().notNull(),
+  atualizadoEm: integer("atualizado_em", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
 
 export const STATUS_PEDIDO = [
   "aguardando_pagamento",

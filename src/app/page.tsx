@@ -13,16 +13,18 @@ import { Header } from "@/components/layout/Header";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { helpLinks, instagramPosts, steps, store, testimonials } from "@/data/mock";
 import { listarCategorias, produtosEmDestaque } from "@/server/catalog";
+import { getHeroImage } from "@/server/settings";
 
 export default async function Home() {
   const [categories, featuredProducts] = await Promise.all([listarCategorias(), produtosEmDestaque(4)]);
+  const hero = getHeroImage();
   return (
     <>
       <AnnouncementBar message={store.avisoBarra} />
       <Header categories={categories} />
 
       <main>
-        <Hero />
+        <Hero image={hero.src} alt={hero.alt} />
         <Benefits parcelas={store.parcelas} />
 
         <section aria-labelledby="categorias-title" className="container-page pt-section-sm pb-6 md:pt-section">

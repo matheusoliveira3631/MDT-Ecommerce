@@ -32,7 +32,7 @@ Pensado para um único servidor: SQLite no disco da instância, fotos no S3 e ba
 ### 1. AWS
 
 1. **Bucket S3** (mesma região da instância). Em "Bloquear acesso público", desmarque só as opções de *políticas de bucket*, para a política abaixo valer.
-2. **Política do bucket**: `deploy/s3-bucket-policy.json` (leitura pública só de `produtos/` e `categorias/`; os backups em `backups/` continuam privados).
+2. **Política do bucket**: `deploy/s3-bucket-policy.json` (leitura pública só de `produtos/`, `categorias/` e `loja/`; os backups em `backups/` continuam privados).
 3. **CORS do bucket**: `deploy/s3-cors.json` (o navegador do admin envia as fotos direto para o S3).
 4. **Papel IAM da instância** com `deploy/iam-policy.json`. O app e o Litestream usam esse papel: nenhuma chave de acesso fica no servidor.
 5. **Security group**: libere só 80 e 443 (e 22 para você). A porta 3000 fica fechada; o Nginx fala com o app por dentro.
@@ -96,7 +96,11 @@ Lista com filtro por status, busca por número, nome ou e-mail e um contador de 
 - Cancelar pede um motivo e devolve o estoque. Se o pagamento já tinha sido aprovado, o reembolso é feito no gateway; se ele chegar depois do cancelamento, o pedido continua cancelado e o histórico avisa para reembolsar.
 - A cliente logada vê os pedidos dela em `/conta`.
 
-Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO` definido e com produtos que tenham preço: o servidor não cobra valor indefinido.
+### Frete
+
+Sai sempre do CEP da loja (`CEP_ORIGEM`, 13732-000). Com `MELHOR_ENVIO_TOKEN` no `.env.production`, a cotação é real no Melhor Envio (Correios, Jadlog e outras), com o peso e as medidas de uma unidade embalada que você informa em cada produto no painel (vazio usa 200 g e 16 × 11 × 2 cm). A mesma cotação vale por 10 minutos, então a sacola, o checkout e o pedido mostram o mesmo valor. Para gerar o token: no Melhor Envio, Configurações → Permissões de acesso → Gerar novo token, marcando o cálculo de frete.
+
+Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com essa variável definida e com produtos que tenham preço: o servidor não cobra valor indefinido.
 
 ## Estrutura
 
@@ -106,7 +110,9 @@ Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO
 - `src/server/auth.ts`: login, sessão (cookie httpOnly; no banco só o SHA-256 do token) e `requireAdmin`/`requireAdminPage`.
 - `src/server/storage.ts`: fotos no S3 (URL pré-assinada) ou numa pasta local, servida por `/arquivos/...`.
 - `src/server/admin-orders.ts`: pedidos no painel (lista, detalhe, regras de status e cancelamento).
-- `src/app/admin`: painel (pedidos, produtos e categorias). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
+- `src/server/shipping.ts` e `melhor-envio.ts`: cotação de frete.
+- `src/server/settings.ts`: ajustes da loja editáveis no painel (foto principal da página inicial).
+- `src/app/admin`: painel (pedidos, produtos, categorias e página inicial). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
 - `src/app/api/produtos`: `GET /api/produtos?slugs=a,b`, dados públicos para sacola, checkout e favoritos (hook `useProducts`).
 - `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Great Vibes, Quicksand e Nunito via `next/font`.
 - `src/components`: `ui` (botões, campos, toast, gaveta), `layout`, `product`, `cart`, `checkout`, `favorites`, `admin`.
@@ -115,4 +121,4 @@ Enquanto frete e gateway forem simulados, o pedido só fecha com `FRETE_SIMULADO
 
 ## Ainda simulado
 
-Frete (`src/server/shipping.ts`, valores de `FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar ficam no armazenamento (falta uma limpeza periódica).
+Frete sem `MELHOR_ENVIO_TOKEN` (`FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar ficam no armazenamento (falta uma limpeza periódica).

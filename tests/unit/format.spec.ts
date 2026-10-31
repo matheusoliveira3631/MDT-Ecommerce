@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { centsToInput, formatPrice, isValidCpf, maskCep, maskCpf, maskPhone, parseBRLToCents, pluralItens, slugify } from "../../src/lib/format";
+import { centsToInput, formatPrice, maskBRL, isValidCpf, maskCep, maskCpf, maskPhone, parseBRLToCents, pluralItens, slugify } from "../../src/lib/format";
 
 test("formata preço em reais ou mostra o placeholder", () => {
   expect(formatPrice(1234.5).replace(/\s/g, " ")).toBe("R$ 1.234,50");
@@ -42,4 +42,15 @@ test("lê o preço digitado em centavos", () => {
 test("gera o endereço (slug) sem acentos", () => {
   expect(slugify("Caixa Milk Café!")).toBe("caixa-milk-cafe");
   expect(slugify("  Festa  Junina  ")).toBe("festa-junina");
+});
+
+test("máscara monetária: os dígitos entram pela direita", () => {
+  expect(maskBRL("")).toBe("");
+  expect(maskBRL("0")).toBe("");
+  expect(maskBRL("5")).toBe("0,05");
+  expect(maskBRL("550")).toBe("5,50");
+  expect(maskBRL("R$ 12,505")).toBe("125,05");
+  expect(maskBRL("123456")).toBe("1.234,56");
+  expect(maskBRL("abc")).toBe("");
+  expect(parseBRLToCents(maskBRL("123456"))).toBe(123456);
 });

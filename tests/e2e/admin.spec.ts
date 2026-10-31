@@ -74,7 +74,20 @@ test("admin cadastra categoria e produto com fotos, e a loja mostra na hora", as
   await page.getByLabel("Preço no Pix (R$)").fill("13,00");
   await page.getByLabel("Pedido mínimo").fill("10");
   await page.getByLabel("Estoque").fill("5");
-  await page.getByLabel("Temas").fill("Arraiá\nCaipira");
+  // Temas viram tags: botão "+" ou Enter; repetido é recusado; o × remove
+  const temas = page.getByRole("list", { name: "Temas adicionados" });
+  await page.getByLabel("Temas", { exact: true }).fill("Arraiá");
+  await page.getByRole("button", { name: "Adicionar tema" }).click();
+  await page.getByLabel("Temas", { exact: true }).fill("Caipira");
+  await page.getByLabel("Temas", { exact: true }).press("Enter");
+  await page.getByLabel("Temas", { exact: true }).fill("Fogueira");
+  await page.getByRole("button", { name: "Adicionar tema" }).click();
+  await page.getByLabel("Temas", { exact: true }).fill("arraiá");
+  await page.getByLabel("Temas", { exact: true }).press("Enter");
+  await expect(page.getByText("“arraiá” já está na lista.")).toBeVisible();
+  await page.getByLabel("Temas", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Remover Fogueira" }).click();
+  await expect(temas.getByRole("listitem")).toHaveText(["Arraiá×", "Caipira×"]);
   await page.getByRole("button", { name: "Adicionar cor" }).click();
   await page.getByLabel("Nome da cor 1").fill("Xadrez vermelho");
   await page.getByLabel("Ativo", { exact: true }).check();
@@ -93,10 +106,17 @@ test("admin cadastra categoria e produto com fotos, e a loja mostra na hora", as
 
   await page.getByRole("button", { name: "Criar produto" }).click();
   await expect(page.getByText("O preço no Pix não pode ser maior que o preço normal.")).toBeVisible();
-  await page.getByLabel("Preço no Pix (R$)").fill("11,90");
+  // Máscara monetária: os dígitos entram pela direita
+  await page.getByLabel("Preço no Pix (R$)").fill("");
+  await page.getByLabel("Preço no Pix (R$)").pressSequentially("1190");
+  await expect(page.getByLabel("Preço no Pix (R$)")).toHaveValue("11,90");
   await page.getByRole("button", { name: "Criar produto" }).click();
+  // Cadastrar volta para a lista de produtos
+  await expect(page).toHaveURL(/\/admin\/produtos$/);
+  await expect(page.getByText("Produto cadastrado")).toBeVisible();
+  await page.getByRole("link", { name: produto }).click();
   await expect(page).toHaveURL(/\/admin\/produtos\/\d+$/);
-  await expect(page.getByText("Produto salvo")).toBeVisible();
+  await expect(temas.getByRole("listitem")).toHaveCount(2);
   const editUrl = page.url();
 
   // A loja mostra na hora, sem novo build
@@ -133,4 +153,27 @@ test("admin cadastra categoria e produto com fotos, e a loja mostra na hora", as
   await page.goto("/admin/categorias");
   await page.getByRole("button", { name: `Excluir ${categoria}` }).click();
   await expect(page.getByText(categoria, { exact: true })).toHaveCount(0);
+});
+
+test("admin troca a foto principal da página inicial", async ({ page }) => {
+  test.setTimeout(60_000);
+  await loginAs(page, TEST_USERS.admin, "/admin/loja");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Página inicial");
+  await page.locator('input[type="file"]').setInputFiles(fixture("foto-rosa.png"));
+  await expect(page.getByLabel("Descrição da foto 1")).toBeVisible();
+  await page.getByLabel("Descrição da foto 1").fill("Mesa de festa rosa com caixas milk");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Página inicial atualizada")).toBeVisible();
+
+  await page.goto("/");
+  await expect(page.getByRole("img", { name: "Mesa de festa rosa com caixas milk" })).toBeVisible();
+  await expect(page.getByText("Foto principal: mesa de festa com os produtos")).toHaveCount(0);
+
+  // Sem foto, volta o espaço reservado
+  await page.goto("/admin/loja");
+  await page.getByRole("button", { name: "Remover foto 1" }).click();
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByText("Página inicial atualizada")).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByText("Foto principal: mesa de festa com os produtos")).toBeVisible();
 });

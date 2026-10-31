@@ -43,6 +43,10 @@ export const productSchema = z
     pedidoMinimo: z.number().int().min(1, "O mínimo é 1.").max(10_000),
     prazoProducaoDias: z.number().int().min(0).max(365, "Use até 365 dias.").nullable(),
     estoque: z.number().int().min(0, "O estoque não pode ser negativo.").max(100_000),
+    pesoGramas: z.number().int().min(1, "Informe o peso em gramas.").max(30_000, "Use até 30.000 g (30 kg).").nullable(),
+    alturaCm: z.number().int().min(1, "Mínimo de 1 cm.").max(100, "Use até 100 cm.").nullable(),
+    larguraCm: z.number().int().min(1, "Mínimo de 1 cm.").max(100, "Use até 100 cm.").nullable(),
+    comprimentoCm: z.number().int().min(1, "Mínimo de 1 cm.").max(100, "Use até 100 cm.").nullable(),
     temas: z.array(z.string().trim().min(1).max(40, "Cada tema pode ter até 40 caracteres.")).max(30, "Use até 30 temas."),
     cores: z
       .array(

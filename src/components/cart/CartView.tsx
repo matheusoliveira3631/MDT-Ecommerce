@@ -144,7 +144,12 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           <ShippingCalculator
             label="Frete"
             placeholder="Seu CEP"
-            onCalculate={quoteShippingAction}
+            onCalculate={(cep) =>
+              quoteShippingAction(
+                cep,
+                lines.map((l) => ({ slug: l.produtoSlug, quantidade: l.quantidade })),
+              )
+            }
             onSelect={setShipping}
           />
           <CouponField

@@ -59,6 +59,9 @@ export interface ShippingOption {
   valor: number | null;
 }
 
+/** Resposta da cotação: as opções ou a mensagem para mostrar no campo de CEP. */
+export type ShippingResult = { ok: true; opcoes: ShippingOption[] } | { ok: false; erro: string };
+
 export interface Category {
   slug: string;
   nome: string;

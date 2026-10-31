@@ -231,7 +231,7 @@ function ProductFormFields({
             <span className="text-ink-muted">contados a partir da aprovação da arte</span>
           </span>
         </div>
-        <ShippingCalculator onCalculate={quoteShippingAction} />
+        <ShippingCalculator onCalculate={(cep) => quoteShippingAction(cep, [{ slug: product.slug, quantidade }])} />
       </div>
 
       {/* Barra fixa no mobile: o formulário é longo e o botão de compra fica fora da tela */}

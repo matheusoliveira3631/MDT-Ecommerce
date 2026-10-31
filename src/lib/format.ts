@@ -66,6 +66,16 @@ export function parseBRLToCents(input: string): number | null {
   return Number(reais) * 100 + Number(centavos.padEnd(2, "0"));
 }
 
+/**
+ * Máscara monetária enquanto digita: os dígitos entram pela direita
+ * ("1" → "0,01", "1250" → "12,50", "123456" → "1.234,56"). Vazio continua vazio.
+ */
+export function maskBRL(value: string): string {
+  const digits = value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 9);
+  if (!digits) return "";
+  return centsToInput(Number(digits));
+}
+
 /** 1250 → "12,50" (para preencher o campo de preço). */
 export function centsToInput(cents: number | null): string {
   if (cents == null) return "";

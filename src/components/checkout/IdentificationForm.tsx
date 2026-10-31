@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/icons";
 import { TextField } from "@/components/ui/TextField";
 import { quoteShippingAction } from "@/app/actions/loja";
+import { useCart } from "@/components/cart/CartProvider";
 import { UFS, type Address, type Customer } from "@/lib/checkout";
 import { cn, formatPrice, isValidCpf, maskCep, maskCpf, maskPhone } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
@@ -54,6 +55,9 @@ export function IdentificationForm({
 }) {
   const router = useRouter();
   const { cliente, endereco, frete: savedFrete, saveIdentification } = useCheckout();
+  const { lines } = useCart();
+  const itens = lines.map((l) => ({ slug: l.produtoSlug, quantidade: l.quantidade }));
+  const itensKey = itens.map((i) => `${i.slug}:${i.quantidade}`).join(",");
   const formRef = useRef<HTMLFormElement>(null);
   const ufId = useId();
 
@@ -92,25 +96,29 @@ export function IdentificationForm({
       setShippingError(undefined);
       return;
     }
+    // A sacola ainda está carregando do navegador
+    if (!itensKey) return;
     let cancelled = false;
     setLoadingShipping(true);
-    quoteShippingAction(cepDigits).then((result) => {
+    quoteShippingAction(cepDigits, itens).then((result) => {
       if (cancelled) return;
       setLoadingShipping(false);
-      if (result.length === 0) {
-        setShippingError("Não encontramos esse CEP.");
+      if (!result.ok) {
+        setShippingError(result.erro);
         setOptions(null);
         setFrete(null);
         return;
       }
       setShippingError(undefined);
-      setOptions(result);
-      setFrete((current) => result.find((o) => o.servico === current?.servico) ?? result[0]);
+      setOptions(result.opcoes);
+      setFrete((current) => result.opcoes.find((o) => o.servico === current?.servico) ?? result.opcoes[0]);
     });
     return () => {
       cancelled = true;
     };
-  }, [cepDigits]);
+    // `itensKey` resume os itens: cota de novo só quando o CEP ou a sacola mudam
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cepDigits, itensKey]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
