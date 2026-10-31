@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { logout } from "@/app/entrar/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { Logo } from "@/components/layout/Logo";
 import { countOrdersByStatus } from "@/server/admin-orders";
 import { requireAdminPage } from "@/server/auth";
 import { db } from "@/server/db";
@@ -21,9 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="border-b border-border bg-white">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="font-script text-[32px] leading-none text-primary no-underline">
-              Mimos da Thaty
-            </Link>
+            <Logo variant="compact" href="/admin" />
             <span className="rounded-pill bg-rose-100 px-2.5 py-1 text-xs font-extrabold text-primary">Painel</span>
           </div>
           <div className="flex items-center gap-4 text-sm">

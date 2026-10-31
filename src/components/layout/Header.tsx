@@ -114,7 +114,7 @@ export function Header(props: HeaderProps) {
   const { categories, defaultQuery } = props;
   return (
     <header className="border-b border-border bg-white">
-      <div className="container-page flex flex-wrap items-center gap-x-6 gap-y-3 py-[18px]">
+      <div className="container-page flex flex-wrap items-center gap-x-3 gap-y-3 py-[18px] md:gap-x-6">
         <Logo />
         <SearchBar defaultQuery={defaultQuery} className="order-last basis-full md:order-none md:basis-[280px] md:flex-1" />
         <div className="ml-auto flex items-center gap-1.5 md:ml-0">

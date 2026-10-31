@@ -18,16 +18,18 @@ export default function OpengraphImage() {
           alignItems: "center",
           justifyContent: "center",
           gap: 28,
-          background: "#fdf5f7",
-          color: "#4a2734",
+          background: "linear-gradient(135deg, #fdf2f6 0%, #fffbf6 50%, #f8f3fc 100%)",
+          color: "#4e3443",
+          border: "12px solid #cfa765",
         }}
       >
         <svg width="120" height="120" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="32" fill="#fae6ec" />
-          <path d="M32 47s-15-9.4-15-21a8.5 8.5 0 0 1 15-5.6A8.5 8.5 0 0 1 47 26c0 11.6-15 21-15 21z" fill="#ad3560" />
+          <circle cx="32" cy="32" r="30" fill="#fbe3ec" stroke="#cfa765" strokeWidth="3" />
+          <path d="M32 47s-15-9.4-15-21a8.5 8.5 0 0 1 15-5.6A8.5 8.5 0 0 1 47 26c0 11.6-15 21-15 21z" fill="#e0679a" />
         </svg>
-        <div style={{ fontSize: 84, fontWeight: 700, color: "#ad3560" }}>{store.nome}</div>
-        <div style={{ fontSize: 36, color: "#7d5a67" }}>{store.descricao}</div>
+        <div style={{ fontSize: 84, fontWeight: 700, color: "#b23a6e" }}>{store.nome}</div>
+        <div style={{ fontSize: 36, color: "#765966" }}>{store.descricao}</div>
+        <div style={{ fontSize: 30, color: "#76539f" }}>Papelaria personalizada · Mococa</div>
       </div>
     ),
     size,

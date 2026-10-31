@@ -5,7 +5,7 @@ import type { NavLink } from "@/lib/types";
 export interface SectionHeadingProps {
   id?: string;
   title: string;
-  /** Palavra de destaque em Great Vibes acima do título. */
+  /** Palavra de destaque (fonte script) acima do título. */
   kicker?: string;
   link?: NavLink;
   align?: "start" | "center";

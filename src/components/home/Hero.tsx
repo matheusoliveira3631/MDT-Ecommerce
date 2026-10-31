@@ -5,15 +5,15 @@ import { Photo } from "@/components/ui/Photo";
 
 export function Hero({ image, alt = "Mesa de festa com os produtos personalizados" }: { image?: string; alt?: string }) {
   return (
-    <section aria-labelledby="hero-title" className="bg-rose-50">
+    <section aria-labelledby="hero-title" className="bg-linear-to-br from-rose-50 via-cream to-lilac-50">
       <div className="container-page grid items-center gap-10 py-section-sm md:py-section lg:grid-cols-2 lg:gap-14">
         <div className="flex flex-col items-start gap-[22px]">
-          <span className="rounded-pill border border-rose-200 bg-white px-3.5 py-2 text-[13px] font-bold tracking-[0.06em] text-primary uppercase">
+          <span className="rounded-pill border border-gold/60 bg-white px-3.5 py-2 text-[12px] font-bold tracking-[0.04em] text-primary uppercase min-[400px]:text-[13px] min-[400px]:tracking-[0.06em]">
             Papelaria personalizada feita à mão
           </span>
           <h1 id="hero-title" className="m-0 text-display-sm md:text-display">
             Cada detalhe da sua festa, do jeitinho que você{" "}
-            <span className="font-script text-[52px] leading-[0.9] font-normal text-primary md:text-[72px]">sonhou</span>
+            <span className="text-brand-gradient font-script text-[52px] leading-[0.9] font-bold md:text-[68px]">sonhou</span>
           </h1>
           <p className="m-0 max-w-[520px] text-body-lg text-ink-muted">
             Caixas milk, topos de bolo, cestas e kits personalizados com o tema, o nome e as cores que você escolher.

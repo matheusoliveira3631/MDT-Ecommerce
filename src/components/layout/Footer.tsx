@@ -6,8 +6,8 @@ export type FooterProps =
   | { variant?: "full"; store: StoreConfig; categories: Category[]; helpLinks: NavLink[] }
   | { variant: "compact"; store: StoreConfig; categories?: never; helpLinks?: never };
 
-const footerLink = "text-ink-on-dark no-underline hover:text-white hover:underline";
-const columnTitle = "mb-1 font-heading font-bold text-white";
+const footerLink = "text-ink no-underline hover:text-primary hover:underline";
+const columnTitle = "mb-1 font-heading font-bold text-lilac-ink";
 
 const legalLinks = [
   { label: "Privacidade", href: "/privacidade" },
@@ -37,9 +37,9 @@ export function Footer(props: FooterProps) {
 
   if (props.variant === "compact") {
     return (
-      <footer className="bg-ink text-ink-on-dark">
+      <footer className="border-t-2 border-gold/40 bg-lilac-100 text-ink">
         <div className="container-page flex flex-wrap items-center justify-between gap-4 py-9 text-sm">
-          <Logo variant="onDark" />
+          <Logo variant="compact" />
           <div className="flex flex-col gap-1 md:items-end">
             <LegalRow store={store} />
           </div>
@@ -50,11 +50,11 @@ export function Footer(props: FooterProps) {
 
   const { categories, helpLinks } = props;
   return (
-    <footer className="bg-ink text-rose-50">
+    <footer className="border-t-2 border-gold/40 bg-lilac-100 text-ink">
       <div className="container-page grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-9 pt-16 pb-8">
         <div className="flex flex-col gap-3.5">
-          <Logo variant="onDark" />
-          <p className="m-0 text-sm leading-relaxed text-ink-on-dark">{store.descricao}</p>
+          <Logo variant="compact" />
+          <p className="m-0 text-sm leading-relaxed text-ink-muted">{store.descricao}</p>
         </div>
 
         <nav aria-label="Loja" className="flex flex-col gap-2.5 text-body">
@@ -75,7 +75,7 @@ export function Footer(props: FooterProps) {
           ))}
         </nav>
 
-        <div className="flex flex-col gap-2.5 text-body text-ink-on-dark">
+        <div className="flex flex-col gap-2.5 text-body text-ink">
           <strong className={columnTitle}>Fale com a gente</strong>
           <span>WhatsApp {store.whatsapp.exibicao}</span>
           <span>{store.email}</span>
@@ -83,7 +83,7 @@ export function Footer(props: FooterProps) {
         </div>
       </div>
       <div className="container-page">
-        <div className="flex flex-wrap justify-between gap-3 border-t border-border-on-dark pt-5 pb-8 text-[13px] text-ink-on-dark">
+        <div className="flex flex-wrap justify-between gap-3 border-t border-lilac-200 pt-5 pb-8 text-[13px] text-ink-muted">
           <LegalRow store={store} />
         </div>
       </div>

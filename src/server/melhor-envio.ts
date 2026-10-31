@@ -79,7 +79,7 @@ export async function quoteMelhorEnvio(
         Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: `Bearer ${config.token}`,
-        "User-Agent": `Mimos da Thaty (${config.contato})`,
+        "User-Agent": `Mimos da Tati (${config.contato})`,
       },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(10_000),

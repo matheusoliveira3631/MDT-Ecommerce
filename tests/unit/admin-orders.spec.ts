@@ -67,10 +67,10 @@ test("pedido pago segue o fluxo até o envio, com rastreio visível para a clien
   const { numero, token } = await pedidoPago();
   expect(getOrderAdmin(db, numero)!.proximos).toEqual(["aguardando_arte", "arte_enviada", "aprovada", "em_producao", "enviado"]);
 
-  expect(updateOrderStatus(db, { numero, status: "arte_enviada" }, "Thaty")).toEqual({ ok: true });
-  expect(updateOrderStatus(db, { numero, status: "arte_enviada" }, "Thaty")).toEqual({ ok: false, error: "O pedido já está nesse status." });
-  expect(updateOrderStatus(db, { numero, status: "aprovada", nota: "Cliente pediu letra maior" }, "Thaty").ok).toBe(true);
-  expect(updateOrderStatus(db, { numero, status: "enviado", rastreio: "qb123456789br" }, "Thaty").ok).toBe(true);
+  expect(updateOrderStatus(db, { numero, status: "arte_enviada" }, "Tati")).toEqual({ ok: true });
+  expect(updateOrderStatus(db, { numero, status: "arte_enviada" }, "Tati")).toEqual({ ok: false, error: "O pedido já está nesse status." });
+  expect(updateOrderStatus(db, { numero, status: "aprovada", nota: "Cliente pediu letra maior" }, "Tati").ok).toBe(true);
+  expect(updateOrderStatus(db, { numero, status: "enviado", rastreio: "qb123456789br" }, "Tati").ok).toBe(true);
 
   const view = getOrderForCustomer(db, numero, token)!;
   expect(view.status).toBe("enviado");
@@ -79,9 +79,9 @@ test("pedido pago segue o fluxo até o envio, com rastreio visível para a clien
   // Histórico do mais novo ao mais antigo, com quem mudou
   const { historico } = getOrderAdmin(db, numero)!;
   expect(historico.map((h) => [h.status, h.autor, h.nota])).toEqual([
-    ["enviado", "Thaty", "Rastreio: QB123456789BR"],
-    ["aprovada", "Thaty", "Cliente pediu letra maior"],
-    ["arte_enviada", "Thaty", null],
+    ["enviado", "Tati", "Rastreio: QB123456789BR"],
+    ["aprovada", "Tati", "Cliente pediu letra maior"],
+    ["arte_enviada", "Tati", null],
     ["aguardando_arte", "Pagamento", null],
     ["aguardando_pagamento", "Loja", null],
   ]);
@@ -90,35 +90,35 @@ test("pedido pago segue o fluxo até o envio, com rastreio visível para a clien
 test("sem pagamento confirmado, o painel não avança o pedido", async () => {
   const { numero } = await novoPedido();
   expect(getOrderAdmin(db, numero)!.proximos).toEqual([]);
-  const result = updateOrderStatus(db, { numero, status: "em_producao" }, "Thaty");
+  const result = updateOrderStatus(db, { numero, status: "em_producao" }, "Tati");
   expect(result.ok).toBe(false);
   expect(db.select().from(pedidos).get()!.status).toBe("aguardando_pagamento");
   // Status fora do fluxo (ou inventado) é recusado na validação
-  expect(updateOrderStatus(db, { numero, status: "cancelado" }, "Thaty").ok).toBe(false);
-  expect(updateOrderStatus(db, { numero, status: "aguardando_pagamento" }, "Thaty").ok).toBe(false);
-  expect(updateOrderStatus(db, { numero, status: "enviado", rastreio: "<script>" }, "Thaty").ok).toBe(false);
+  expect(updateOrderStatus(db, { numero, status: "cancelado" }, "Tati").ok).toBe(false);
+  expect(updateOrderStatus(db, { numero, status: "aguardando_pagamento" }, "Tati").ok).toBe(false);
+  expect(updateOrderStatus(db, { numero, status: "enviado", rastreio: "<script>" }, "Tati").ok).toBe(false);
 });
 
 test("cancelar pelo painel devolve o estoque uma vez e trava o pedido", async () => {
   const { numero } = await pedidoPago();
   expect(estoque()).toBe(80);
-  expect(cancelOrderAdmin(db, { numero, motivo: "" }, "Thaty").ok).toBe(false);
-  expect(cancelOrderAdmin(db, { numero, motivo: "Cliente desistiu" }, "Thaty")).toEqual({ ok: true });
+  expect(cancelOrderAdmin(db, { numero, motivo: "" }, "Tati").ok).toBe(false);
+  expect(cancelOrderAdmin(db, { numero, motivo: "Cliente desistiu" }, "Tati")).toEqual({ ok: true });
   expect(estoque()).toBe(100);
-  expect(cancelOrderAdmin(db, { numero, motivo: "De novo" }, "Thaty").ok).toBe(false);
+  expect(cancelOrderAdmin(db, { numero, motivo: "De novo" }, "Tati").ok).toBe(false);
   expect(estoque()).toBe(100);
 
   const pedido = db.select().from(pedidos).get()!;
   expect(pedido.status).toBe("cancelado");
   // O pagamento continua aprovado: o reembolso é feito no gateway
   expect(pedido.pagamentoStatus).toBe("aprovado");
-  expect(updateOrderStatus(db, { numero, status: "em_producao" }, "Thaty").ok).toBe(false);
-  expect(getOrderAdmin(db, numero)!.historico[0]).toMatchObject({ status: "cancelado", autor: "Thaty", nota: "Cliente desistiu" });
+  expect(updateOrderStatus(db, { numero, status: "em_producao" }, "Tati").ok).toBe(false);
+  expect(getOrderAdmin(db, numero)!.historico[0]).toMatchObject({ status: "cancelado", autor: "Tati", nota: "Cliente desistiu" });
 });
 
 test("pagamento aprovado depois do cancelamento fica registrado para reembolso", async () => {
   const { numero, pagamentoId } = await novoPedido();
-  cancelOrderAdmin(db, { numero, motivo: "Cliente desistiu" }, "Thaty");
+  cancelOrderAdmin(db, { numero, motivo: "Cliente desistiu" }, "Tati");
   expect(applyPaymentUpdate(db, pagamentoId, "aprovado")).toBe("ignorado");
   const pedido = db.select().from(pedidos).get()!;
   expect(pedido.status).toBe("cancelado");
@@ -132,8 +132,8 @@ test("pagamento aprovado depois do cancelamento fica registrado para reembolso",
 
 test("pedido enviado não é cancelado pelo painel", async () => {
   const { numero } = await pedidoPago();
-  updateOrderStatus(db, { numero, status: "enviado" }, "Thaty");
-  expect(cancelOrderAdmin(db, { numero, motivo: "Extraviou" }, "Thaty").ok).toBe(false);
+  updateOrderStatus(db, { numero, status: "enviado" }, "Tati");
+  expect(cancelOrderAdmin(db, { numero, motivo: "Extraviou" }, "Tati").ok).toBe(false);
   expect(estoque()).toBe(80);
 });
 

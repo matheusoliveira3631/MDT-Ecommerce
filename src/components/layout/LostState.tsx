@@ -5,7 +5,7 @@ import { SearchBar } from "./Header";
 import { whatsappHref } from "@/lib/whatsapp";
 
 export interface LostStateProps {
-  /** Palavra em Great Vibes acima do título (88px). */
+  /** Palavra na fonte de destaque acima do título (88px). */
   kicker: string;
   title: string;
   text: string;

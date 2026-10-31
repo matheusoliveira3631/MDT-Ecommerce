@@ -3,7 +3,7 @@ import { SectionHeading } from "./SectionHeading";
 
 export function StepsSection({ steps }: { steps: Step[] }) {
   return (
-    <section id="como-funciona" aria-labelledby="como-funciona-title" className="scroll-mt-4 bg-rose-50">
+    <section id="como-funciona" aria-labelledby="como-funciona-title" className="scroll-mt-4 bg-lilac-50">
       <div className="container-page py-section-sm md:py-20">
         <SectionHeading
           id="como-funciona-title"

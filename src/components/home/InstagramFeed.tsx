@@ -6,7 +6,7 @@ export function InstagramFeed({ handle, posts }: { handle: string; posts: Instag
   if (posts.length === 0) return null;
   const profile = `https://instagram.com/${handle}`;
   return (
-    <section aria-labelledby="instagram-title" className="bg-rose-50">
+    <section aria-labelledby="instagram-title" className="bg-mint-50">
       <div className="container-page py-section-sm md:py-16">
         <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
           <h2 id="instagram-title" className="m-0 text-[24px] md:text-[28px]">

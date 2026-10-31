@@ -1,4 +1,4 @@
-# Mimos da Thaty · e-commerce
+# Mimos da Tati · e-commerce
 
 Next.js (App Router) + TypeScript + Tailwind CSS v4. Catálogo em SQLite (Drizzle), fotos no S3 e painel admin com login.
 
@@ -50,7 +50,7 @@ cp .env.example .env.production   # preencha NEXT_PUBLIC_SITE_URL, DATABASE_PATH
 npm ci
 npm run build                     # o S3 precisa estar no .env.production já no build (libera as fotos no next/image)
 npm run db:seed                   # só na primeira vez
-npm run admin:criar -- thaty@email.com "Thaty"
+npm run admin:criar -- tati@email.com "Tati"
 
 sudo cp deploy/mimos.service /etc/systemd/system/
 sudo systemctl enable --now mimos
@@ -118,7 +118,7 @@ Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com e
 - `src/server/settings.ts`: ajustes da loja editáveis no painel (foto principal da página inicial).
 - `src/app/admin`: painel (pedidos, produtos, categorias e página inicial). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
 - `src/app/api/produtos`: `GET /api/produtos?slugs=a,b`, dados públicos para sacola, checkout e favoritos (hook `useProducts`).
-- `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Great Vibes, Quicksand e Nunito via `next/font`.
+- `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Dancing Script, Quicksand e Nunito via `next/font`.
 - `src/components`: `ui` (botões, campos, toast, gaveta), `layout`, `product`, `cart`, `checkout`, `favorites`, `admin`.
 - `src/data/mock.ts`: configuração da loja e integrações ainda simuladas. Valores entre colchetes (`[X]`, CNPJ, contatos) são placeholders.
 - `src/data/content.ts`: textos das páginas de ajuda e legais (as legais pedem revisão jurídica).

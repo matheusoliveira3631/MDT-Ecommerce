@@ -137,7 +137,7 @@ export default async function AdminOrderPage({ params }: PageProps) {
               <a
                 href={whatsappHref(
                   customerWhatsappDigits(pedido.clienteWhatsapp),
-                  `Oi, ${primeiroNome}! Aqui é da Mimos da Thaty, sobre o seu pedido ${pedido.numero}.`,
+                  `Oi, ${primeiroNome}! Aqui é da Mimos da Tati, sobre o seu pedido ${pedido.numero}.`,
                 )}
                 target="_blank"
                 rel="noopener noreferrer"

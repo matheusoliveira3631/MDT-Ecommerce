@@ -7,7 +7,7 @@ import type { InstagramPost, NavLink, Step, StoreConfig, Testimonial } from "@/l
  */
 
 export const store: StoreConfig = {
-  nome: "Mimos da Thaty",
+  nome: "Mimos da Tati",
   descricao: "Papelaria personalizada para festas, presentes e datas especiais.",
   avisoBarra: "Enviamos para todo o Brasil · [X]% de desconto no Pix · Parcele em até [N]x",
   descontoPix: "[X]",
@@ -15,10 +15,10 @@ export const store: StoreConfig = {
   whatsapp: {
     numero: "[5500000000000]",
     exibicao: "[(00) 00000-0000]",
-    mensagemPadrao: "Olá! Vim pelo site da Mimos da Thaty.",
+    mensagemPadrao: "Olá! Vim pelo site da Mimos da Tati.",
   },
   email: "[contato@seudominio.com.br]",
-  instagram: "[seuinstagram]",
+  instagram: "mimosdatati.mococa",
   cnpj: "[00.000.000/0001-00]",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
   referenciaMaxMB: null,

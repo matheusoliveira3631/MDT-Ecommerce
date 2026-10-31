@@ -1,7 +1,7 @@
 # /etc/systemd/system/mimos.service
 # Mantém a loja rodando e reinicia se cair. Ajuste User e WorkingDirectory.
 [Unit]
-Description=Mimos da Thaty (Next.js)
+Description=Mimos da Tati (Next.js)
 After=network.target
 
 [Service]

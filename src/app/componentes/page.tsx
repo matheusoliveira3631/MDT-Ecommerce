@@ -97,12 +97,12 @@ export default async function ComponentesPage() {
             </div>
 
             <div className="flex flex-col gap-7">
-              <Section title="Logo" description="Provisório em Great Vibes, até chegar o SVG oficial.">
+              <Section title="Logo" description="Potinho de lápis e nome em degradê, como na cartilha da marca.">
                 <div className="flex flex-wrap items-center gap-6">
                   <Logo />
-                  <div className="flex items-center gap-5 rounded-lg bg-ink px-6 py-4">
+                  <div className="flex items-center gap-5 rounded-lg bg-lilac-100 px-6 py-4">
                     <Logo variant="monogram" />
-                    <Logo variant="onDark" />
+                    <Logo variant="compact" />
                   </div>
                 </div>
               </Section>

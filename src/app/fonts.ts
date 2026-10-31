@@ -1,11 +1,11 @@
-import { Great_Vibes, Nunito, Quicksand } from "next/font/google";
+import { Dancing_Script, Nunito, Quicksand } from "next/font/google";
 
-/** Logo provisório e palavras de destaque curtas (nunca abaixo de 30px). */
-export const greatVibes = Great_Vibes({
-  weight: "400",
+/** Nome da marca e palavras de destaque curtas, no traço de pincel da cartilha (nunca abaixo de 24px). */
+export const dancingScript = Dancing_Script({
+  weight: ["600", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-great-vibes",
+  variable: "--font-dancing-script",
 });
 
 /** Títulos, nomes de produto e navegação. */
@@ -24,4 +24,4 @@ export const nunito = Nunito({
   variable: "--font-nunito",
 });
 
-export const fontVariables = [greatVibes.variable, quicksand.variable, nunito.variable].join(" ");
+export const fontVariables = [dancingScript.variable, quicksand.variable, nunito.variable].join(" ");

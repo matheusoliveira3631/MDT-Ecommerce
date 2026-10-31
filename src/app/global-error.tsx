@@ -18,13 +18,13 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           gap: 16,
           padding: 24,
           textAlign: "center",
-          background: "#fdf5f7",
-          color: "#4a2734",
+          background: "#fffbf6",
+          color: "#4e3443",
           fontFamily: "system-ui, sans-serif",
         }}
       >
         <h1 style={{ margin: 0, fontSize: 28 }}>Algo deu errado por aqui</h1>
-        <p style={{ margin: 0, color: "#7d5a67" }}>Tente carregar a página de novo.</p>
+        <p style={{ margin: 0, color: "#765966" }}>Tente carregar a página de novo.</p>
         <button
           type="button"
           onClick={reset}
@@ -33,7 +33,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
             padding: "0 26px",
             border: 0,
             borderRadius: 999,
-            background: "#ad3560",
+            background: "#b23a6e",
             color: "#fff",
             fontWeight: 800,
             fontSize: 15,
