@@ -26,6 +26,8 @@ jobs:
   deploy:
     needs: verificar
     runs-on: ubuntu-latest
+    # Os segredos EC2_* ficam no environment "EC2" (Settings → Environments)
+    environment: EC2
     # Host e usuário podem ser segredos ou variáveis do repositório; a chave, só segredo
     env:
       EC2_HOST: ${{ secrets.EC2_HOST || vars.EC2_HOST }}
@@ -40,7 +42,7 @@ jobs:
           [ -n "$EC2_USER" ] || faltando="$faltando EC2_USER"
           [ -n "$EC2_PRIVATE_KEY" ] || faltando="$faltando EC2_PRIVATE_KEY"
           if [ -n "$faltando" ]; then
-            echo "::error::Segredos vazios:$faltando. Crie em Settings → Secrets and variables → Actions → aba Secrets → Repository secrets."
+            echo "::error::Segredos vazios:$faltando. Confira em Settings → Environments → EC2 → Environment secrets."
             exit 1
           fi
           case "$EC2_PRIVATE_KEY" in
