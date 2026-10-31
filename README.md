@@ -71,6 +71,10 @@ Para restaurar num servidor novo, antes de subir o app: `litestream restore -con
 
 ### 4. Atualizações
 
+Automáticas: cada push na `main` roda o workflow `.github/workflows/deploy.yml`, que confere tipos e lint, entra no servidor por SSH, atualiza o código, gera o build, reinicia a loja e confere se ela respondeu. Usa os segredos `EC2_HOST`, `EC2_USER` e `EC2_PRIVATE_KEY` do repositório. Também dá para rodar à mão em Actions → Deploy → Run workflow.
+
+À mão, no servidor:
+
 ```bash
 cd /srv/mimos && git pull && npm ci && npm run build && sudo systemctl restart mimos
 ```
