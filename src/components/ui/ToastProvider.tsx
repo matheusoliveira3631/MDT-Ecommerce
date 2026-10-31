@@ -7,7 +7,7 @@ import { Toast, type ToastAction } from "./Toast";
 interface ToastOptions {
   message: string;
   action?: ToastAction;
-  /** ms; o padrão do handoff é 4s (5s para "Desfazer"). */
+  /** ms; o padrão é 4s (5s para "Desfazer"). */
   duration?: number;
 }
 

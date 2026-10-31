@@ -1,6 +1,6 @@
 # Mimos da Thaty · e-commerce
 
-Next.js (App Router) + TypeScript + Tailwind CSS v4, a partir do handoff de design. Catálogo em SQLite (Drizzle), fotos no S3 e painel admin com login.
+Next.js (App Router) + TypeScript + Tailwind CSS v4. Catálogo em SQLite (Drizzle), fotos no S3 e painel admin com login.
 
 ## Rodando localmente
 

@@ -1,7 +1,7 @@
 import { centsToReais, computeTotals, reaisToCents, type CouponRule } from "./pricing";
 import type { Product, ShippingOption } from "./types";
 
-/** Personalização de um item da sacola (HANDOFF.md, seção 9). */
+/** Personalização de um item da sacola. */
 export interface Personalizacao {
   tema: string;
   temaOutro?: string;

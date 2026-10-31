@@ -24,7 +24,7 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   boleto: "Boleto",
 };
 
-/** Status do pedido (HANDOFF.md, seção 9), na ordem em que acontecem. */
+/** Status do pedido, na ordem em que acontecem. */
 export const ORDER_STATUS = [
   { value: "aguardando_pagamento", label: "Pedido recebido", text: "Aguardando a confirmação do pagamento." },
   { value: "aguardando_arte", label: "Pagamento confirmado", text: "Estamos preparando a sua arte." },

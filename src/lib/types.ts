@@ -1,4 +1,4 @@
-/** Tipos de dados que o design pressupõe (HANDOFF.md, seção 9). */
+/** Tipos de dados que o design pressupõe. */
 
 export type BadgeVariant = "customizable" | "bestseller" | "new" | "soldout" | "deadline";
 

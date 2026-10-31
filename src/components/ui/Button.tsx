@@ -11,7 +11,7 @@ import { Spinner } from "./icons";
 
 export type ButtonVariant = "primary" | "secondary" | "soft" | "text";
 /**
- * `md` 50px e `lg` 56px (handoff). Extras: `sm` (44px) é o "Personalizar" dos cards;
+ * `md` 50px e `lg` 56px. Extras: `sm` (44px) é o "Personalizar" dos cards;
  * `field` (46px) acompanha inputs de CEP e cupom.
  */
 export type ButtonSize = "sm" | "field" | "md" | "lg";
