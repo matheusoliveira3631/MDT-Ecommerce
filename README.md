@@ -118,7 +118,7 @@ Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com e
 - `src/server/settings.ts`: ajustes da loja editáveis no painel (foto principal da página inicial).
 - `src/app/admin`: painel (pedidos, produtos, categorias e página inicial). Toda gravação passa por `requireAdmin()` nas Server Actions de `src/app/admin/actions.ts`.
 - `src/app/api/produtos`: `GET /api/produtos?slugs=a,b`, dados públicos para sacola, checkout e favoritos (hook `useProducts`).
-- `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Dancing Script, Quicksand e Nunito via `next/font`.
+- `src/app/globals.css`: tokens de design (`@theme`); `src/app/fonts.ts`: Dancing Script, Quicksand e Nunito, hospedadas em `src/app/fonts` (o build não baixa nada do Google).
 - `src/components`: `ui` (botões, campos, toast, gaveta), `layout`, `product`, `cart`, `checkout`, `favorites`, `admin`.
 - `src/data/mock.ts`: configuração da loja e integrações ainda simuladas. Valores entre colchetes (`[X]`, CNPJ, contatos) são placeholders.
 - `src/data/content.ts`: textos das páginas de ajuda e legais (as legais pedem revisão jurídica).
