@@ -41,8 +41,8 @@ test("busca ignora acentos e ordena pela URL", async ({ page }) => {
 test("busca sem resultado reaproveita a 404 e mantém o termo", async ({ page }) => {
   await page.goto("/busca?q=unicornio%20azul");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nada encontrado para “unicornio azul”");
-  await expect(page.locator("#busca-destaque")).toHaveValue("unicornio azul");
-  await expect(page.locator("#busca-header")).toHaveValue("unicornio azul");
+  await expect(page.locator("#busca-destaque:visible")).toHaveValue("unicornio azul");
+  await expect(page.locator("#busca-header:visible")).toHaveValue("unicornio azul");
 });
 
 test("páginas de ajuda e legais", async ({ page }) => {

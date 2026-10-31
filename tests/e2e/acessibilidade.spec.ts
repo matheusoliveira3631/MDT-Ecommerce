@@ -20,6 +20,8 @@ const PAGES = [
 ];
 
 async function scan(page: import("@playwright/test").Page) {
+  // Em páginas dinâmicas o <title> chega junto com o streaming: espera antes de auditar
+  await expect(page).toHaveTitle(/\S/);
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   return results.violations.map((v) => `${v.id}: ${v.help} (${v.nodes.map((n) => n.target.join(" ")).join(", ")})`);
 }
