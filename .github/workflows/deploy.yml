@@ -26,10 +26,30 @@ jobs:
   deploy:
     needs: verificar
     runs-on: ubuntu-latest
+    # Host e usuário podem ser segredos ou variáveis do repositório; a chave, só segredo
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST || vars.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER || vars.EC2_USER }}
     steps:
+      - name: Conferir os segredos
+        env:
+          EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+        run: |
+          faltando=""
+          [ -n "$EC2_HOST" ] || faltando="$faltando EC2_HOST"
+          [ -n "$EC2_USER" ] || faltando="$faltando EC2_USER"
+          [ -n "$EC2_PRIVATE_KEY" ] || faltando="$faltando EC2_PRIVATE_KEY"
+          if [ -n "$faltando" ]; then
+            echo "::error::Segredos vazios:$faltando. Crie em Settings → Secrets and variables → Actions → aba Secrets → Repository secrets."
+            exit 1
+          fi
+          case "$EC2_PRIVATE_KEY" in
+            *"-----BEGIN"*) ;;
+            *) echo "::error::EC2_PRIVATE_KEY precisa ser o conteúdo inteiro do .pem, com as linhas BEGIN e END."; exit 1 ;;
+          esac
+
       - name: Configurar SSH
         env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
@@ -38,9 +58,6 @@ jobs:
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Atualizar, gerar o build e reiniciar
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes "$EC2_USER@$EC2_HOST" 'bash -se' <<'REMOTO'
           set -euo pipefail
