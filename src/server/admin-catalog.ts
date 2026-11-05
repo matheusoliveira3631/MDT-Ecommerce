@@ -1,6 +1,7 @@
 import "server-only";
-import { asc, desc, eq, inArray, ne, and, count } from "drizzle-orm";
+import { asc, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { slugify } from "@/lib/format";
 import { db } from "./db";
 import { categorias, produtoFotos, produtos } from "./db/schema";
 import { KEY_PATTERN, publicUrl, removeFile } from "./storage";
@@ -10,20 +11,12 @@ import { KEY_PATTERN, publicUrl, removeFile } from "./storage";
  * src/app/admin/actions.ts) já passou por requireAdmin().
  */
 
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const slugField = z
-  .string()
-  .trim()
-  .min(1, "Informe o endereço (slug).")
-  .max(120, "Use no máximo 120 caracteres.")
-  .regex(SLUG, "Use só letras minúsculas, números e hífens, ex.: caixa-milk.");
 const cents = z.number().int().min(0, "O preço não pode ser negativo.").max(10_000_000).nullable();
 const photoKey = z.string().regex(KEY_PATTERN, "Foto inválida. Envie de novo.");
 
 export const categorySchema = z.object({
   id: z.number().int().positive().optional(),
   nome: z.string().trim().min(2, "Informe o nome da categoria.").max(60, "Use no máximo 60 caracteres."),
-  slug: slugField,
   posicao: z.number().int().min(0).max(999),
   fotoChave: photoKey.nullable(),
 });
@@ -32,7 +25,6 @@ export const productSchema = z
   .object({
     id: z.number().int().positive().optional(),
     nome: z.string().trim().min(2, "Informe o nome do produto.").max(120, "Use no máximo 120 caracteres."),
-    slug: slugField,
     categoriaId: z.number({ error: "Escolha a categoria." }).int().positive("Escolha a categoria."),
     resumo: z.string().trim().max(300, "Use no máximo 300 caracteres."),
     descricao: z.string().trim().max(5000, "Use no máximo 5.000 caracteres."),
@@ -153,16 +145,31 @@ export type AdminProduct = NonNullable<ReturnType<typeof adminGetProduct>>;
 
 /* ---------- Escrita ---------- */
 
-function slugTaken(table: typeof produtos | typeof categorias, slug: string, id?: number) {
-  const where = id ? and(eq(table.slug, slug), ne(table.id, id)) : eq(table.slug, slug);
-  return Boolean(db.select({ id: table.id }).from(table).where(where).get());
+function slugTaken(table: typeof produtos | typeof categorias, slug: string) {
+  return Boolean(db.select({ id: table.id }).from(table).where(eq(table.slug, slug)).get());
+}
+
+/**
+ * Endereço na loja, calculado do nome. Na edição o endereço não muda: links
+ * compartilhados, a sacola e os favoritos guardam o endereço do produto.
+ * Nome repetido ganha -2, -3...
+ */
+function resolveSlug(table: typeof produtos | typeof categorias, nome: string, id?: number): string {
+  if (id) {
+    const current = db.select({ slug: table.slug }).from(table).where(eq(table.id, id)).get();
+    if (current) return current.slug;
+  }
+  const base = slugify(nome).slice(0, 100).replace(/-+$/, "") || (table === produtos ? "produto" : "categoria");
+  let slug = base;
+  for (let n = 2; slugTaken(table, slug); n++) slug = `${base}-${n}`;
+  return slug;
 }
 
 export async function saveCategory(raw: unknown): Promise<SaveResult> {
   const parsed = categorySchema.safeParse(raw);
   if (!parsed.success) return { ok: false, errors: toFieldErrors(parsed.error) };
-  const { id, ...data } = parsed.data;
-  if (slugTaken(categorias, data.slug, id)) return { ok: false, errors: { slug: "Já existe uma categoria com esse endereço." } };
+  const { id, ...fields } = parsed.data;
+  const data = { ...fields, slug: resolveSlug(categorias, fields.nome, id) };
 
   let oldPhoto: string | null = null;
   let savedId: number;
@@ -192,8 +199,8 @@ export async function deleteCategory(id: number): Promise<{ ok: true } | { ok: f
 export async function saveProduct(raw: unknown): Promise<SaveResult> {
   const parsed = productSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, errors: toFieldErrors(parsed.error) };
-  const { id, fotos, ...data } = parsed.data;
-  if (slugTaken(produtos, data.slug, id)) return { ok: false, errors: { slug: "Já existe um produto com esse endereço." } };
+  const { id, fotos, ...fields } = parsed.data;
+  const data = { ...fields, slug: resolveSlug(produtos, fields.nome, id) };
   if (!db.select({ id: categorias.id }).from(categorias).where(eq(categorias.id, data.categoriaId)).get()) {
     return { ok: false, errors: { categoriaId: "Escolha a categoria." } };
   }

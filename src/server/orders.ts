@@ -5,6 +5,7 @@ import { OTHER_THEME } from "@/lib/cart";
 import type { OrderView } from "@/lib/checkout";
 import { isValidCpf } from "@/lib/format";
 import { computeTotals, type CouponRule } from "@/lib/pricing";
+import { REFERENCE_PATTERN } from "@/lib/uploads";
 import type { Database } from "./db/connect";
 import { pedidoHistorico, pedidoItens, pedidos, produtos, type PedidoRow } from "./db/schema";
 import type { Charge, ChargeRequest } from "./payments";
@@ -31,6 +32,7 @@ const personalizacaoSchema = z.object({
   nome: text(30).min(1, "Informe o nome que vai na arte."),
   idadeOcasiao: text(60).optional(),
   cor: text(40),
+  referenciaChave: z.string().regex(REFERENCE_PATTERN).optional(),
   referenciaNome: text(200).optional(),
   observacoes: text(500).optional(),
 });
@@ -342,6 +344,9 @@ export function getOrderForCustomer(db: Database, numero: string, token: string)
       precoUnitarioCentavos: i.precoUnitarioCentavos,
       tema: i.personalizacao.tema === OTHER_THEME && i.personalizacao.temaOutro ? i.personalizacao.temaOutro : i.personalizacao.tema,
       nomeNaArte: i.personalizacao.nome,
+      referenciaChave: i.personalizacao.referenciaChave ?? null,
+      referenciaNome: i.personalizacao.referenciaNome ?? null,
+      referenciaUrl: null,
     })),
     subtotalCentavos: pedido.subtotalCentavos,
     freteCentavos: pedido.freteCentavos,

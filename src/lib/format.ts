@@ -98,3 +98,8 @@ export function formatDateTime(date: Date | string): string {
   return dateTime.format(typeof date === "string" ? new Date(date) : date);
 }
 
+
+/** Valor do frete: "Grátis" para a retirada (0), o placeholder enquanto não há valor. */
+export function formatShipping(valor: number | null | undefined, placeholder = "R$ [valor]"): string {
+  return valor === 0 ? "Grátis" : formatPrice(valor, placeholder);
+}

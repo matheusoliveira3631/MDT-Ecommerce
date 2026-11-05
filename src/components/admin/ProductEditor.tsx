@@ -47,7 +47,7 @@ const EDITABLE_BADGES: Array<{ tipo: "customizable" | "bestseller" | "new"; labe
 
 /** Ordem dos campos na tela: o foco vai para o primeiro com erro. */
 const FIELD_ORDER = [
-  "nome", "slug", "categoriaId", "resumo", "descricao", "medidas", "precoBaseCentavos", "precoPixCentavos",
+  "nome", "categoriaId", "resumo", "descricao", "medidas", "precoBaseCentavos", "precoPixCentavos",
   "pedidoMinimo", "prazoProducaoDias", "estoque", "pesoGramas", "alturaCm", "larguraCm", "comprimentoCm", "temas", "cores", "selos", "fotos",
 ];
 
@@ -66,8 +66,8 @@ export function ProductEditor({
   const isNew = !initial.id;
 
   const [nome, setNome] = useState(initial.nome);
-  const [slug, setSlug] = useState(initial.slug);
-  const [slugEdited, setSlugEdited] = useState(!isNew);
+  // Endereço na loja: calculado do nome no servidor; na edição não muda
+  const slug = isNew ? slugify(nome) : initial.slug;
   const [categoriaId, setCategoriaId] = useState(initial.categoriaId ? String(initial.categoriaId) : "");
   const [resumo, setResumo] = useState(initial.resumo);
   const [descricao, setDescricao] = useState(initial.descricao);
@@ -126,7 +126,6 @@ export function ProductEditor({
     const result = await saveProductAction({
       id: initial.id,
       nome,
-      slug,
       categoriaId: categoriaId ? Number(categoriaId) : undefined,
       resumo,
       descricao,
@@ -185,28 +184,14 @@ export function ProductEditor({
         <div data-field="nome">
           <TextField
             label="Nome"
+            hint={`Endereço na loja: /produto/${slug || "…"}`}
             value={nome}
             maxLength={120}
-            onChange={(e) => {
-              setNome(e.target.value);
-              if (!slugEdited) setSlug(slugify(e.target.value));
-            }}
+            onChange={(e) => setNome(e.target.value)}
             error={errors.nome}
           />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div data-field="slug">
-            <TextField
-              label="Endereço na loja"
-              hint={`mimosdathaty.com.br/produto/${slug || "…"}`}
-              value={slug}
-              onChange={(e) => {
-                setSlugEdited(true);
-                setSlug(slugify(e.target.value));
-              }}
-              error={errors.slug}
-            />
-          </div>
           <div data-field="categoriaId">
             <SelectField label="Categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} error={errors.categoriaId}>
               <option value="">Escolha…</option>

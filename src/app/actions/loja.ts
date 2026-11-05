@@ -7,6 +7,7 @@ import type { ShippingResult } from "@/lib/types";
 import { findCoupon } from "@/server/coupons";
 import { rateLimit } from "@/server/rate-limit";
 import { quoteShipping, ShippingUnavailableError } from "@/server/shipping";
+import { createReferenceUpload, type ReferenceTicket } from "@/server/storage";
 
 /*
  * Consultas públicas feitas pelo navegador. O cálculo final do pedido refaz
@@ -40,4 +41,21 @@ export async function quoteShippingAction(cep: string, itens: unknown): Promise<
 
 export async function validateCouponAction(code: string): Promise<CouponRule | null> {
   return findCoupon(String(code).slice(0, 40));
+}
+
+/** Envio da imagem de referência da cliente (convite, decoração), antes de ir para a sacola. */
+export async function requestReferenceUploadAction(input: {
+  contentType: string;
+  tamanho: number;
+}): Promise<{ ok: true; ticket: ReferenceTicket } | { ok: false; erro: string }> {
+  // Sem login: 20 envios por hora por IP
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  if (!rateLimit(`referencia:${ip}`, 20, 60 * 60 * 1000).ok) {
+    return { ok: false, erro: "Muitos envios seguidos. Tente de novo mais tarde." };
+  }
+  try {
+    return { ok: true, ticket: await createReferenceUpload({ contentType: String(input?.contentType), tamanho: Number(input?.tamanho) }) };
+  } catch (error) {
+    return { ok: false, erro: error instanceof Error ? error.message : "Não foi possível enviar a imagem." };
+  }
 }

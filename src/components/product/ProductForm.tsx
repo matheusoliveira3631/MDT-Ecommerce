@@ -12,8 +12,9 @@ import { TextArea, TextField } from "@/components/ui/TextField";
 import { ThemeChips } from "@/components/ui/ThemeChips";
 import { useToast } from "@/components/ui/ToastProvider";
 import { OTHER_THEME, type CartLine, type Personalizacao } from "@/lib/cart";
-import { quoteShippingAction } from "@/app/actions/loja";
+import { quoteShippingAction, requestReferenceUploadAction } from "@/app/actions/loja";
 import { formatPrice } from "@/lib/format";
+import { REFERENCE_ACCEPT } from "@/lib/uploads";
 import { whatsappHref } from "@/lib/whatsapp";
 import type { Product } from "@/lib/types";
 import { NotifyMeForm } from "./NotifyMeForm";
@@ -78,6 +79,37 @@ function ProductFormFields({
   const [errors, setErrors] = useState<Errors>({});
   const showToast = useToast();
 
+  // Referência: enviada assim que é escolhida; o pedido guarda só a chave
+  const [referencia, setReferencia] = useState({ chave: initial?.referenciaChave, nome: initial?.referenciaNome });
+  const [refStatus, setRefStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [refError, setRefError] = useState<string>();
+  const refAttempt = useRef(0);
+
+  async function handleReference(file: File | null) {
+    const attempt = ++refAttempt.current;
+    setRefError(undefined);
+    if (!file) {
+      setRefStatus("idle");
+      return;
+    }
+    setRefStatus("sending");
+    try {
+      const result = await requestReferenceUploadAction({ contentType: file.type, tamanho: file.size });
+      if (!result.ok) throw new Error(result.erro);
+      const response = await fetch(result.ticket.url, { method: "PUT", headers: result.ticket.headers, body: file });
+      if (!response.ok) throw new Error("Não foi possível enviar a imagem. Tente de novo.");
+      // Outra imagem escolhida enquanto esta subia: vale a mais nova
+      if (attempt !== refAttempt.current) return;
+      setReferencia({ chave: result.ticket.chave, nome: file.name });
+      setRefStatus("sent");
+    } catch (error) {
+      if (attempt !== refAttempt.current) return;
+      setReferencia({ chave: undefined, nome: undefined });
+      setRefStatus("idle");
+      setRefError(error instanceof Error ? error.message : "Não foi possível enviar a imagem.");
+    }
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const next: Errors = {};
@@ -92,15 +124,20 @@ function ProductFormFields({
       return;
     }
 
+    if (refStatus === "sending") {
+      setRefError("Espere a imagem de referência terminar de enviar.");
+      return;
+    }
+
     const data = new FormData(e.currentTarget);
-    const file = data.get("referencia");
     const personalizacao: Personalizacao = {
       tema,
       temaOutro: tema === OTHER_THEME ? temaOutro.trim() : undefined,
       nome: nome.trim(),
       idadeOcasiao: optional(data.get("idadeOcasiao")),
       cor,
-      referenciaNome: file instanceof File && file.name ? file.name : initial?.referenciaNome,
+      referenciaChave: referencia.chave,
+      referenciaNome: referencia.chave ? referencia.nome : undefined,
       observacoes: optional(data.get("observacoes")),
     };
 
@@ -177,13 +214,16 @@ function ProductFormFields({
             <Legend hint="(opcional)">4. Referência</Legend>
             <FileDrop
               name="referencia"
-              accept="image/jpeg,image/png"
+              accept={REFERENCE_ACCEPT}
               maxSizeMB={referenciaMaxMB}
               title="Envie uma imagem do convite ou da decoração"
-              formats="JPG ou PNG"
+              formats="JPG, PNG ou WebP"
+              onChange={handleReference}
+              status={refStatus === "sending" ? "Enviando a imagem…" : refStatus === "sent" ? "Imagem enviada ✓" : undefined}
+              error={refError}
             />
-            {initial?.referenciaNome && (
-              <p className="mt-2 mb-0 text-sm text-ink-muted">Referência atual: {initial.referenciaNome}</p>
+            {refStatus === "idle" && referencia.chave && referencia.nome && (
+              <p className="mt-2 mb-0 text-sm text-ink-muted">Referência atual: {referencia.nome}</p>
             )}
           </fieldset>
         )}

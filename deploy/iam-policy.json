@@ -8,6 +8,12 @@
       "Resource": ["arn:aws:s3:::SEU-BUCKET/produtos/*", "arn:aws:s3:::SEU-BUCKET/categorias/*", "arn:aws:s3:::SEU-BUCKET/loja/*"]
     },
     {
+      "Sid": "ReferenciasDasClientes",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::SEU-BUCKET/referencias/*"
+    },
+    {
       "Sid": "BackupLitestream",
       "Effect": "Allow",
       "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],

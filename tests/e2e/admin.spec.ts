@@ -53,7 +53,8 @@ test("admin cadastra categoria e produto com fotos, e a loja mostra na hora", as
   // Categoria com foto
   await page.getByRole("button", { name: "Nova categoria" }).click();
   await page.getByLabel("Nome", { exact: true }).fill(categoria);
-  await expect(page.getByLabel("Endereço")).toHaveValue(categoriaSlug);
+  // Sem campo de endereço: calculado do nome
+  await expect(page.getByText(`Endereço na loja: /categoria/${categoriaSlug}`)).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles(fixture("foto-rosa.png"));
   await expect(page.getByRole("button", { name: "Remover foto 1" })).toBeVisible();
   await page.getByRole("button", { name: "Criar categoria" }).click();
@@ -67,7 +68,7 @@ test("admin cadastra categoria e produto com fotos, e a loja mostra na hora", as
   await expect(page.getByLabel("Nome", { exact: true })).toBeFocused();
 
   await page.getByLabel("Nome", { exact: true }).fill(produto);
-  await expect(page.getByLabel("Endereço na loja")).toHaveValue(produtoSlug);
+  await expect(page.getByText(`Endereço na loja: /produto/${produtoSlug}`)).toBeVisible();
   await page.getByLabel("Categoria").selectOption({ label: categoria });
   await page.getByLabel("Resumo").fill("Bandeirinhas personalizadas para a festa.");
   await page.getByLabel("Preço (R$)").fill("12,50");

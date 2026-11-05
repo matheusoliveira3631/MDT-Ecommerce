@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { store } from "@/data/mock";
 import { db } from "@/server/db";
 import { getOrderForCustomer } from "@/server/orders";
+import { privateFileUrl } from "@/server/storage";
 
 export const metadata: Metadata = {
   title: "Pedido recebido",
@@ -18,8 +19,13 @@ interface PageProps {
 
 export default async function ConfirmacaoPage({ searchParams }: PageProps) {
   const { pedido, token } = await searchParams;
-  const order = pedido && token ? getOrderForCustomer(db, pedido, token) : null;
-  if (!order) notFound();
+  const found = pedido && token ? getOrderForCustomer(db, pedido, token) : null;
+  if (!found) notFound();
+  // Referências são privadas: links temporários só para quem tem o token do pedido
+  const order = {
+    ...found,
+    itens: await Promise.all(found.itens.map(async (i) => ({ ...i, referenciaUrl: await privateFileUrl(i.referenciaChave) }))),
+  };
 
   return (
     <>

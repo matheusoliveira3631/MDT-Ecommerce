@@ -3,6 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { produtos } from "./db/schema";
 import { quoteMelhorEnvio, ShippingUnavailableError, type ShippingPackage } from "./melhor-envio";
+import { pickupAvailable, pickupQuote } from "./pickup";
 
 /*
  * Cotação de frete, sempre saindo do CEP da loja (CEP_ORIGEM, padrão 13732-000).
@@ -75,17 +76,32 @@ const CACHE_MS = 10 * 60 * 1000;
 const cache = new Map<string, { at: number; quotes: ShippingQuote[] }>();
 
 /**
- * Opções de frete para um CEP (8 dígitos) e os itens a enviar.
+ * Opções de frete para um CEP (8 dígitos) e os itens a enviar, com a retirada
+ * em Mococa quando o CEP é da região.
  * Lista vazia = CEP não encontrado. Lança ShippingUnavailableError se a
  * transportadora não responder.
  */
 export async function quoteShipping(cep: string, itens: ShippingItem[]): Promise<ShippingQuote[]> {
   const destino = cep.replace(/\D/g, "");
   if (destino.length !== 8 || /^0+$/.test(destino)) return [];
+  // Mococa e região: retirada sem custo, por último (escolhida de propósito, nunca por padrão)
+  const retirada = pickupAvailable(destino) ? [pickupQuote()] : [];
 
+  try {
+    return [...(await carrierQuotes(destino, itens)), ...retirada];
+  } catch (error) {
+    // Transportadora fora do ar: quem pode retirar ainda fecha o pedido
+    if (retirada.length > 0 && error instanceof ShippingUnavailableError) {
+      console.error(error);
+      return retirada;
+    }
+    throw error;
+  }
+}
+
+async function carrierQuotes(destino: string, itens: ShippingItem[]): Promise<ShippingQuote[]> {
   const token = process.env.MELHOR_ENVIO_TOKEN?.trim();
   if (!token) return simulatedOptions();
-
   const pacotes = packagesFor(itens);
   if (pacotes.length === 0) return [];
   const key = `${destino}|${pacotes.map((p) => `${p.id}:${p.quantidade}`).sort().join(",")}`;

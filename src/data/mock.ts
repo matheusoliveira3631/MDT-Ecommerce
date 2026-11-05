@@ -13,15 +13,15 @@ export const store: StoreConfig = {
   descontoPix: "[X]",
   parcelas: "[N]",
   whatsapp: {
-    numero: "[5500000000000]",
-    exibicao: "[(00) 00000-0000]",
+    numero: "5519995939494",
+    exibicao: "(19) 99593-9494",
     mensagemPadrao: "Olá! Vim pelo site da Mimos da Tati.",
   },
   email: "[contato@seudominio.com.br]",
-  instagram: "mimosdatati.mococa",
+  instagram: "mimosdethatymococa",
   cnpj: "[00.000.000/0001-00]",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
-  referenciaMaxMB: null,
+  referenciaMaxMB: 8,
   prazoProducaoPadrao: "[X]",
   politicaEntrega: "[Prazo de produção, opções de envio e retirada, política para produtos personalizados.]",
   bannerSazonal: {
@@ -57,7 +57,7 @@ export const testimonials: Testimonial[] = Array.from({ length: 3 }, () => ({
 
 /** Em produção, lista vazia esconde a seção inteira. */
 export const instagramPosts: InstagramPost[] = Array.from({ length: 6 }, (_, i) => ({
-  href: `https://instagram.com/${store.instagram}`,
+  href: `https://www.instagram.com/${store.instagram}/`,
   alt: `Post ${i + 1} do Instagram`,
 }));
 

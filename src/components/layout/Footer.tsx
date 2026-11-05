@@ -77,9 +77,13 @@ export function Footer(props: FooterProps) {
 
         <div className="flex flex-col gap-2.5 text-body text-ink">
           <strong className={columnTitle}>Fale com a gente</strong>
-          <span>WhatsApp {store.whatsapp.exibicao}</span>
+          <a href={`https://wa.me/${store.whatsapp.numero}`} target="_blank" rel="noopener noreferrer" className={footerLink}>
+            WhatsApp {store.whatsapp.exibicao}
+          </a>
           <span>{store.email}</span>
-          <span>Instagram @{store.instagram}</span>
+          <a href={`https://www.instagram.com/${store.instagram}/`} target="_blank" rel="noopener noreferrer" className={footerLink}>
+            Instagram @{store.instagram}
+          </a>
         </div>
       </div>
       <div className="container-page">

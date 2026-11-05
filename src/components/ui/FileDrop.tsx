@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/format";
 
 export interface FileDropProps {
@@ -12,6 +12,10 @@ export interface FileDropProps {
   /** Texto dos formatos aceitos, ex.: "JPG ou PNG". */
   formats: string;
   onChange?: (file: File | null) => void;
+  /** Situação do arquivo escolhido (ex.: "Enviando…"), no lugar dos formatos aceitos. */
+  status?: ReactNode;
+  /** Erro vindo de fora (ex.: o envio falhou). */
+  error?: string;
 }
 
 function UploadIcon() {
@@ -23,12 +27,13 @@ function UploadIcon() {
 }
 
 /** Label tracejada envolvendo um `input type=file` visualmente oculto. */
-export function FileDrop({ name, accept, maxSizeMB, title, formats, onChange }: FileDropProps) {
+export function FileDrop({ name, accept, maxSizeMB, title, formats, onChange, status, error: externalError }: FileDropProps) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [error, setError] = useState<string>();
+  const [localError, setError] = useState<string>();
+  const error = localError ?? externalError;
 
   useEffect(() => {
     if (!file) return setPreview(null);
@@ -72,7 +77,9 @@ export function FileDrop({ name, accept, maxSizeMB, title, formats, onChange }: 
           <img src={preview} alt="" className="size-14 shrink-0 rounded-sm object-cover" />
           <span className="min-w-0 flex-1 text-sm">
             <strong className="block truncate text-body">{file.name}</strong>
-            <span className="text-ink-muted">{limit}</span>
+            <span role="status" className="text-ink-muted">
+              {status ?? limit}
+            </span>
           </span>
           <button
             type="button"

@@ -158,17 +158,34 @@ export function OrderConfirmation({ order, whatsapp }: { order: OrderView; whats
         <h2 id="itens-title" className="m-0 text-[19px] font-bold">
           Itens do pedido
         </h2>
-        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-body">
+        <ul className="m-0 flex list-none flex-col gap-3 p-0 text-body">
           {order.itens.map((item, i) => (
-            <li key={i} className="flex justify-between gap-3">
-              <span>
-                {item.nome}
-                <span className="text-ink-muted">
-                  {" "}
-                  · {item.tema} · {item.nomeNaArte} · {item.quantidade} un.
+            <li key={i} className="flex flex-col gap-2">
+              <span className="flex justify-between gap-3">
+                <span>
+                  {item.nome}
+                  <span className="text-ink-muted">
+                    {" "}
+                    · {item.tema} · {item.nomeNaArte} · {item.quantidade} un.
+                  </span>
                 </span>
+                <span className="whitespace-nowrap">{reais(item.precoUnitarioCentavos * item.quantidade)}</span>
               </span>
-              <span className="whitespace-nowrap">{reais(item.precoUnitarioCentavos * item.quantidade)}</span>
+              {item.referenciaUrl && (
+                <a
+                  href={item.referenciaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 self-start rounded-sm border border-border p-2 pr-3 text-sm no-underline hover:border-rose-300"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- link temporário e privado, sem otimização */}
+                  <img src={item.referenciaUrl} alt="" className="size-14 shrink-0 rounded-sm bg-rose-50 object-cover" />
+                  <span className="flex flex-col">
+                    <strong className="text-ink">Sua referência</strong>
+                    <span className="text-primary underline">Ver imagem{item.referenciaNome ? ` (${item.referenciaNome})` : ""}</span>
+                  </span>
+                </a>
+              )}
             </li>
           ))}
         </ul>

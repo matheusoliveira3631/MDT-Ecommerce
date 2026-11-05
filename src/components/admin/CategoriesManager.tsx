@@ -30,8 +30,8 @@ function CategoryForm({
   const router = useRouter();
   const showToast = useToast();
   const [nome, setNome] = useState(initial?.nome ?? "");
-  const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [slugEdited, setSlugEdited] = useState(Boolean(initial));
+  // Endereço calculado do nome no servidor; na edição não muda
+  const slug = initial ? initial.slug : slugify(nome);
   const [posicao, setPosicao] = useState(String(initial?.posicao ?? 0));
   const [foto, setFoto] = useState<UploadedPhoto[]>(
     initial?.fotoChave && initial.fotoUrl ? [{ chave: initial.fotoChave, src: initial.fotoUrl, alt: "" }] : [],
@@ -45,7 +45,6 @@ function CategoryForm({
     const result = await saveCategoryAction({
       id: initial?.id,
       nome,
-      slug,
       posicao: Number(posicao) || 0,
       fotoChave: foto[0]?.chave ?? null,
     });
@@ -67,26 +66,14 @@ function CategoryForm({
           {errors.form}
         </p>
       )}
-      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_120px]">
+      <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
         <TextField
           label="Nome"
+          hint={`Endereço na loja: /categoria/${slug || "…"}`}
           value={nome}
           maxLength={60}
-          onChange={(e) => {
-            setNome(e.target.value);
-            if (!slugEdited) setSlug(slugify(e.target.value));
-          }}
+          onChange={(e) => setNome(e.target.value)}
           error={errors.nome}
-        />
-        <TextField
-          label="Endereço"
-          hint={`/categoria/${slug || "…"}`}
-          value={slug}
-          onChange={(e) => {
-            setSlugEdited(true);
-            setSlug(slugify(e.target.value));
-          }}
-          error={errors.slug}
         />
         <TextField label="Ordem" type="number" min={0} inputMode="numeric" value={posicao} onChange={(e) => setPosicao(e.target.value)} />
       </div>

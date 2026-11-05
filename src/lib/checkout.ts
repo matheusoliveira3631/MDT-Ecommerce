@@ -43,7 +43,17 @@ export interface OrderView {
   criadoEm: string;
   cliente: { nome: string; email: string; whatsapp: string };
   pagamento: { metodo: PaymentMethod; status: "pendente" | "aprovado" | "recusado" | "expirado"; instrucoes: Record<string, string> };
-  itens: Array<{ nome: string; quantidade: number; precoUnitarioCentavos: number; tema: string; nomeNaArte: string }>;
+  itens: Array<{
+    nome: string;
+    quantidade: number;
+    precoUnitarioCentavos: number;
+    tema: string;
+    nomeNaArte: string;
+    referenciaChave: string | null;
+    referenciaNome: string | null;
+    /** Link temporário da referência, preenchido pela página (a imagem é privada). */
+    referenciaUrl: string | null;
+  }>;
   subtotalCentavos: number;
   freteCentavos: number;
   freteServico: string;

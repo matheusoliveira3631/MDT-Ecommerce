@@ -10,7 +10,7 @@ import { placeOrderAction } from "@/app/checkout/actions";
 import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
 import { PAYMENT_LABELS, type PaymentMethod } from "@/lib/checkout";
-import { cn, formatPrice } from "@/lib/format";
+import { cn, formatPrice, formatShipping } from "@/lib/format";
 import { CheckoutGate } from "./CheckoutGate";
 import { useCheckout } from "./CheckoutProvider";
 import { CheckoutSummary } from "./CheckoutSummary";
@@ -126,7 +126,8 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
             <br />
             {endereco.bairro} · {endereco.cidade}/{endereco.uf} · CEP {endereco.cep}
             <br />
-            {frete.servico} · {frete.prazo} após a produção · {formatPrice(frete.valor, "R$ [frete]")}
+            {frete.servico} · {frete.prazo}
+            {frete.valor === 0 ? "" : " após a produção"} · {formatShipping(frete.valor, "R$ [frete]")}
           </ReviewCard>
         </section>
 

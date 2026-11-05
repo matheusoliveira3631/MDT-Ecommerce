@@ -4,7 +4,7 @@ import type { InstagramPost } from "@/lib/types";
 /** Sem posts, a seção inteira some. */
 export function InstagramFeed({ handle, posts }: { handle: string; posts: InstagramPost[] }) {
   if (posts.length === 0) return null;
-  const profile = `https://instagram.com/${handle}`;
+  const profile = `https://www.instagram.com/${handle}/`;
   return (
     <section aria-labelledby="instagram-title" className="bg-mint-50">
       <div className="container-page py-section-sm md:py-16">

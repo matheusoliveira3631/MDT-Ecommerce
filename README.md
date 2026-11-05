@@ -92,6 +92,10 @@ O navegador manda só intenções (produtos, quantidades, personalização, ende
 
 Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, rede instável). A confirmação (`/checkout/confirmacao?pedido=…&token=…`) é montada no servidor e exige o token do pedido. O gateway avisa o resultado em `POST /api/pagamentos/webhook`, assinado com `PAGAMENTO_WEBHOOK_SECRET`; aprovado libera a arte, recusado ou expirado cancela e devolve o estoque (uma vez só).
 
+### Imagem de referência
+
+Na página do produto, a cliente pode enviar uma imagem do convite ou da decoração (JPG, PNG ou WebP, até 8 MB, 20 envios por hora por IP). Ela vai direto para a pasta privada `referencias/` do S3 e o pedido guarda só a chave. A imagem aparece na confirmação do pedido (para quem tem o link com o token) e no detalhe do pedido no painel, sempre por links temporários de 1 hora. Precisa da regra "ReferenciasDasClientes" de `deploy/iam-policy.json` no papel da instância; a política pública do bucket não inclui essa pasta.
+
 ### No painel (`/admin/pedidos`)
 
 Lista com filtro por status, busca por número, nome ou e-mail e um contador de pedidos pagos esperando arte no menu. No detalhe ficam os itens com toda a personalização, o contato da cliente (botão que abre o WhatsApp dela já com o número do pedido), a entrega e o histórico de quem mudou o quê.
@@ -103,6 +107,8 @@ Lista com filtro por status, busca por número, nome ou e-mail e um contador de 
 ### Frete
 
 Sai sempre do CEP da loja (`CEP_ORIGEM`, 13732-000). Com `MELHOR_ENVIO_TOKEN` no `.env.production`, a cotação é real no Melhor Envio (Correios, Jadlog e outras), com o peso e as medidas de uma unidade embalada que você informa em cada produto no painel (vazio usa 200 g e 16 × 11 × 2 cm). A mesma cotação vale por 10 minutos, então a sacola, o checkout e o pedido mostram o mesmo valor. Para gerar o token: no Melhor Envio, Configurações → Permissões de acesso → Gerar novo token, marcando o cálculo de frete.
+
+Para CEPs de Mococa e região (prefixos de `RETIRADA_CEPS`, padrão `137`), aparece também "Retirada em Mococa/SP", sem custo, combinada pelo WhatsApp. Ela entra por último, para nunca ser escolhida sem querer, e continua disponível se a transportadora estiver fora do ar.
 
 Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com essa variável definida e com produtos que tenham preço: o servidor não cobra valor indefinido.
 
@@ -125,4 +131,4 @@ Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com e
 
 ## Ainda simulado
 
-Frete sem `MELHOR_ENVIO_TOKEN` (`FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar ficam no armazenamento (falta uma limpeza periódica).
+Frete sem `MELHOR_ENVIO_TOKEN` (`FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar, e referências de clientes que não fecharam o pedido, ficam no armazenamento (falta uma limpeza periódica).

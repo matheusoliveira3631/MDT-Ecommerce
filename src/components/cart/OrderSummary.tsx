@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/Button";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatShipping } from "@/lib/format";
 
 export interface OrderSummaryProps {
   subtotal: number | null;
@@ -35,7 +35,7 @@ export function TotalsList({ subtotal, shipping, discount, total, pixTotal, parc
           {shipping === undefined ? (
             <span className="text-ink-muted">Informe o CEP</span>
           ) : (
-            formatPrice(shipping, "R$ [frete]")
+            formatShipping(shipping, "R$ [frete]")
           )}
         </dd>
         {discount !== undefined && (

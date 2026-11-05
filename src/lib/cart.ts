@@ -8,7 +8,8 @@ export interface Personalizacao {
   nome: string;
   idadeOcasiao?: string;
   cor: string;
-  /** Só o nome do arquivo por enquanto; o upload depende do armazenamento (S3, R2 ou Supabase). */
+  /** Imagem de referência já enviada (referencias/<uuid>.jpg) e o nome original do arquivo. */
+  referenciaChave?: string;
   referenciaNome?: string;
   observacoes?: string;
 }

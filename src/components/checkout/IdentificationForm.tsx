@@ -8,7 +8,7 @@ import { TextField } from "@/components/ui/TextField";
 import { quoteShippingAction } from "@/app/actions/loja";
 import { useCart } from "@/components/cart/CartProvider";
 import { UFS, type Address, type Customer } from "@/lib/checkout";
-import { cn, formatPrice, isValidCpf, maskCep, maskCpf, maskPhone } from "@/lib/format";
+import { cn, formatShipping, isValidCpf, maskCep, maskCpf, maskPhone } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
 import { useCheckout } from "./CheckoutProvider";
 
@@ -247,7 +247,7 @@ export function IdentificationForm({
                   <strong className="block">{option.servico}</strong>
                   <span className="text-sm text-ink-muted">{option.prazo} após a produção</span>
                 </span>
-                <strong>{formatPrice(option.valor, "R$ [valor]")}</strong>
+                <strong>{formatShipping(option.valor)}</strong>
               </label>
             ))}
           </div>

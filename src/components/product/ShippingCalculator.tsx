@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { cn, formatPrice, maskCep } from "@/lib/format";
+import { cn, formatShipping, maskCep } from "@/lib/format";
 import type { ShippingOption, ShippingResult } from "@/lib/types";
 
 export interface ShippingCalculatorProps {
@@ -111,7 +111,7 @@ export function ShippingCalculator({
                 <strong className="block">{option.servico}</strong>
                 <span className="text-ink-muted">{option.prazo}</span>
               </span>
-              <strong>{formatPrice(option.valor, "R$ [valor]")}</strong>
+              <strong>{formatShipping(option.valor)}</strong>
             </label>
           ))}
         </fieldset>

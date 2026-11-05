@@ -1,9 +1,10 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { REFERENCE_PATTERN } from "@/lib/uploads";
 
 /*
  * Armazenamento das fotos. Com S3_BUCKET definido usa o S3 (upload direto do
@@ -86,8 +87,60 @@ export async function createUpload(input: {
   return { chave, url: `/arquivos/${chave}`, headers: { "Content-Type": input.contentType }, publicUrl: publicUrl(chave) };
 }
 
+/* ---------- Referências das clientes (privadas) ---------- */
+
+// Assina os links do driver local; sem ARQUIVOS_SEGREDO, um segredo por processo (os links duram minutos).
+// Fica no globalThis: o Next empacota rotas e ações separadamente, e todas precisam do mesmo segredo.
+const globalForFiles = globalThis as unknown as { arquivosSegredo?: string };
+const SIGNING_SECRET = process.env.ARQUIVOS_SEGREDO || (globalForFiles.arquivosSegredo ??= randomBytes(32).toString("hex"));
+
+function sign(method: "GET" | "PUT", chave: string, exp: number) {
+  return createHmac("sha256", SIGNING_SECRET).update(`${method}:${chave}:${exp}`).digest("base64url");
+}
+
+function signedLocalUrl(method: "GET" | "PUT", chave: string, ttlSeconds: number) {
+  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
+  return `/arquivos/${chave}?exp=${exp}&sig=${sign(method, chave, exp)}`;
+}
+
+/** Confere o link assinado do driver local (método, chave e validade). */
+export function verifySignedUrl(method: "GET" | "PUT", chave: string, exp: string | null, sig: string | null): boolean {
+  const expires = Number(exp);
+  if (!sig || !Number.isInteger(expires) || expires < Date.now() / 1000) return false;
+  const expected = Buffer.from(sign(method, chave, expires));
+  const given = Buffer.from(sig);
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
+export interface ReferenceTicket {
+  chave: string;
+  url: string;
+  headers: Record<string, string>;
+}
+
+/** Destino do upload da referência da cliente (sem login): só a pasta referencias/, privada. */
+export async function createReferenceUpload(input: { contentType: string; tamanho: number }): Promise<ReferenceTicket> {
+  const ext = IMAGE_TYPES[input.contentType as ImageType];
+  if (!ext) throw new Error("Envie uma imagem JPG, PNG ou WebP.");
+  if (!(input.tamanho > 0) || input.tamanho > MAX_IMAGE_BYTES) throw new Error("A imagem passa de 8 MB.");
+
+  const chave = `referencias/${randomUUID()}.${ext}`;
+  if (s3) {
+    const command = new PutObjectCommand({ Bucket: bucket, Key: chave, ContentType: input.contentType, ContentLength: input.tamanho });
+    return { chave, url: await getSignedUrl(s3, command, { expiresIn: 300 }), headers: { "Content-Type": input.contentType } };
+  }
+  return { chave, url: signedLocalUrl("PUT", chave, 300), headers: { "Content-Type": input.contentType } };
+}
+
+/** Link temporário (1 h) para ver uma referência; só para quem já provou acesso ao pedido. */
+export async function privateFileUrl(chave: string | null | undefined, ttlSeconds = 3600): Promise<string | null> {
+  if (!chave || !REFERENCE_PATTERN.test(chave)) return null;
+  if (s3) return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: chave }), { expiresIn: ttlSeconds });
+  return signedLocalUrl("GET", chave, ttlSeconds);
+}
+
 export async function removeFile(chave: string): Promise<void> {
-  if (!KEY_PATTERN.test(chave)) return;
+  if (!KEY_PATTERN.test(chave) && !REFERENCE_PATTERN.test(chave)) return;
   if (s3) {
     await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: chave }));
     return;
@@ -97,5 +150,5 @@ export async function removeFile(chave: string): Promise<void> {
 
 /** Caminho local de uma chave válida (só para o driver local). */
 export function localPath(chave: string): string | null {
-  return KEY_PATTERN.test(chave) ? path.join(UPLOADS_DIR, chave) : null;
+  return KEY_PATTERN.test(chave) || REFERENCE_PATTERN.test(chave) ? path.join(UPLOADS_DIR, chave) : null;
 }

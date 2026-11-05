@@ -11,6 +11,7 @@ import { whatsappHref } from "@/lib/whatsapp";
 import { customerWhatsappDigits, getOrderAdmin } from "@/server/admin-orders";
 import { requireAdminPage } from "@/server/auth";
 import { db } from "@/server/db";
+import { privateFileUrl } from "@/server/storage";
 
 interface PageProps {
   params: Promise<{ numero: string }>;
@@ -42,7 +43,11 @@ export default async function AdminOrderPage({ params }: PageProps) {
   await requireAdminPage(`/admin/pedidos/${numero}`);
   const data = getOrderAdmin(db, numero);
   if (!data) notFound();
-  const { pedido, itens, historico, proximos } = data;
+  const { pedido, historico, proximos } = data;
+  // Referências são privadas: links temporários gerados aqui, depois da checagem de admin
+  const itens = await Promise.all(
+    data.itens.map(async (i) => ({ ...i, referenciaUrl: await privateFileUrl(i.personalizacao.referenciaChave) })),
+  );
   const e = pedido.endereco;
   const primeiroNome = pedido.clienteNome.split(" ")[0];
 
@@ -72,7 +77,10 @@ export default async function AdminOrderPage({ params }: PageProps) {
                   ["Nome na arte", p.nome],
                   ["Idade ou ocasião", p.idadeOcasiao],
                   ["Cor", p.cor || undefined],
-                  ["Referência", p.referenciaNome ? `${p.referenciaNome} (peça o arquivo pelo WhatsApp)` : undefined],
+                  [
+                    "Referência",
+                    !item.referenciaUrl && p.referenciaNome ? `${p.referenciaNome} (peça o arquivo pelo WhatsApp)` : undefined,
+                  ],
                   ["Observações", p.observacoes],
                 ];
                 return (
@@ -100,6 +108,24 @@ export default async function AdminOrderPage({ params }: PageProps) {
                           </div>
                         ))}
                     </dl>
+                    {item.referenciaUrl && (
+                      <figure className="m-0 flex flex-col gap-1.5 self-start">
+                        <a href={item.referenciaUrl} target="_blank" rel="noopener noreferrer">
+                          {/* eslint-disable-next-line @next/next/no-img-element -- link temporário e privado, sem otimização */}
+                          <img
+                            src={item.referenciaUrl}
+                            alt={`Referência enviada pela cliente${p.referenciaNome ? `: ${p.referenciaNome}` : ""}`}
+                            className="max-h-60 max-w-full rounded-md border border-border bg-rose-50 object-contain"
+                          />
+                        </a>
+                        <figcaption className="text-sm text-ink-muted">
+                          Referência da cliente ·{" "}
+                          <a href={item.referenciaUrl} target="_blank" rel="noopener noreferrer">
+                            abrir em tamanho original
+                          </a>
+                        </figcaption>
+                      </figure>
+                    )}
                   </li>
                 );
               })}
