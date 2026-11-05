@@ -6,15 +6,14 @@ import { Newsletter } from "@/components/home/Newsletter";
 import { SeasonalBanner } from "@/components/home/SeasonalBanner";
 import { SectionHeading } from "@/components/home/SectionHeading";
 import { StepsSection } from "@/components/home/StepsSection";
-import { TestimonialsSection } from "@/components/home/Testimonial";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import { helpLinks, steps, store, testimonials } from "@/data/mock";
+import { helpLinks, steps, store } from "@/data/mock";
 import { listarCategorias, produtosEmDestaque } from "@/server/catalog";
 import { recentInstagramPosts } from "@/server/instagram";
-import { getHeroImage } from "@/server/settings";
+import { activeSeasonalCollections, getHeroImage } from "@/server/settings";
 
 export default async function Home() {
   const [categories, featuredProducts, instagramPosts] = await Promise.all([
@@ -23,6 +22,7 @@ export default async function Home() {
     recentInstagramPosts(6),
   ]);
   const hero = getHeroImage();
+  const colecoes = activeSeasonalCollections();
   return (
     <>
       <AnnouncementBar message={store.avisoBarra} />
@@ -56,8 +56,9 @@ export default async function Home() {
         </section>
 
         <StepsSection steps={steps} />
-        <SeasonalBanner banner={store.bannerSazonal} />
-        <TestimonialsSection testimonials={testimonials} />
+        {colecoes.map((colecao, i) => (
+          <SeasonalBanner key={i} banner={colecao} id={`sazonal-title-${i}`} />
+        ))}
         <InstagramFeed handle={store.instagram} posts={instagramPosts} />
         <Newsletter />
       </main>

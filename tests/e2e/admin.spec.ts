@@ -160,10 +160,11 @@ test("admin troca a foto principal da página inicial", async ({ page }) => {
   test.setTimeout(60_000);
   await loginAs(page, TEST_USERS.admin, "/admin/loja");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Página inicial");
-  await page.locator('input[type="file"]').setInputFiles(fixture("foto-rosa.png"));
+  const principal = page.locator("fieldset").filter({ hasText: "Foto principal" });
+  await principal.locator('input[type="file"]').setInputFiles(fixture("foto-rosa.png"));
   await expect(page.getByLabel("Descrição da foto 1")).toBeVisible();
   await page.getByLabel("Descrição da foto 1").fill("Mesa de festa rosa com caixas milk");
-  await page.getByRole("button", { name: "Salvar" }).click();
+  await page.getByRole("button", { name: "Salvar", exact: true }).click();
   await expect(page.getByText("Página inicial atualizada")).toBeVisible();
 
   await page.goto("/");
@@ -172,9 +173,47 @@ test("admin troca a foto principal da página inicial", async ({ page }) => {
 
   // Sem foto, volta o espaço reservado
   await page.goto("/admin/loja");
-  await page.getByRole("button", { name: "Remover foto 1" }).click();
-  await page.getByRole("button", { name: "Salvar" }).click();
+  await principal.getByRole("button", { name: "Remover foto 1" }).click();
+  await page.getByRole("button", { name: "Salvar", exact: true }).click();
   await expect(page.getByText("Página inicial atualizada")).toBeVisible();
   await page.goto("/");
   await expect(page.getByText("Foto principal: mesa de festa com os produtos")).toBeVisible();
+});
+
+test("coleções sazonais: o painel cria, ordena e desliga as faixas da página inicial", async ({ page }) => {
+  test.setTimeout(60_000);
+  await loginAs(page, TEST_USERS.admin, "/admin/loja");
+  await expect(page.getByRole("heading", { name: "Coleções sazonais" })).toBeVisible();
+
+  // Nova coleção de Páscoa, levando para Caixas milk, com foto
+  await page.getByRole("button", { name: "Adicionar coleção" }).click();
+  const pascoa = page.locator("fieldset").last();
+  await pascoa.getByLabel("Destaque").fill("coleção de Páscoa");
+  await pascoa.getByLabel("Título").fill("Páscoa doce para toda a família");
+  await pascoa.getByLabel("Texto", { exact: true }).fill("Encomendas até 20/03.");
+  await pascoa.getByLabel("Botão leva para a categoria").selectOption({ label: "Caixas milk" });
+  await pascoa.locator('input[type="file"]').setInputFiles(fixture("foto-lilas.png"));
+  await expect(pascoa.getByRole("button", { name: "Remover foto 1" })).toBeVisible();
+  // A Páscoa sobe para o primeiro lugar e o Natal é desligado
+  await page.getByRole("button", { name: "Subir Páscoa doce para toda a família" }).click();
+  const natal = page.locator("fieldset").filter({ hasText: "Natal com mimos" });
+  await natal.getByLabel("Ativa").uncheck();
+  await page.getByRole("button", { name: "Salvar coleções" }).click();
+  await expect(page.getByText("Coleções salvas")).toBeVisible();
+
+  await page.goto("/");
+  const faixa = page.getByRole("region", { name: "Páscoa doce para toda a família" });
+  await expect(faixa).toContainText("coleção de Páscoa");
+  await expect(faixa.getByRole("link", { name: "Conhecer a coleção" })).toHaveAttribute("href", "/categoria/caixas-milk");
+  await expect(faixa.getByRole("img", { name: "Páscoa doce para toda a família" })).toBeVisible();
+  await expect(page.getByText("Natal com mimos para presentear quem você ama")).toHaveCount(0);
+
+  // Volta como estava: só o Natal, ativo
+  await page.goto("/admin/loja");
+  await page.getByRole("button", { name: "Remover Páscoa doce para toda a família" }).click();
+  await page.locator("fieldset").filter({ hasText: "Natal com mimos" }).getByLabel("Ativa").check();
+  await page.getByRole("button", { name: "Salvar coleções" }).click();
+  await expect(page.getByText("Coleções salvas")).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Natal com mimos para presentear quem você ama" })).toBeVisible();
 });

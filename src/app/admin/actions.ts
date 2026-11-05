@@ -11,7 +11,7 @@ import {
   saveProduct,
   type SaveResult,
 } from "@/server/admin-catalog";
-import { saveHomeSettings, type SettingsResult } from "@/server/settings";
+import { saveHomeSettings, saveSeasonalCollections, type SettingsResult } from "@/server/settings";
 import { createUpload, UPLOAD_FOLDERS, type UploadFolder, type UploadTicket } from "@/server/storage";
 
 /*
@@ -69,6 +69,13 @@ export async function requestUploadAction(input: {
 /** Foto principal da página inicial. */
 export async function saveHomeSettingsAction(input: unknown): Promise<SettingsResult | ActionError> {
   const result = await guarded(() => saveHomeSettings(input));
+  if (result.ok) revalidatePath("/");
+  return result;
+}
+
+/** Coleções sazonais (faixas da página inicial). */
+export async function saveSeasonalCollectionsAction(input: unknown): Promise<SettingsResult | ActionError> {
+  const result = await guarded(() => saveSeasonalCollections(input));
   if (result.ok) revalidatePath("/");
   return result;
 }

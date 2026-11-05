@@ -96,27 +96,20 @@ export interface StoreConfig {
   /** Texto do acordeão "Prazos, entrega e trocas". */
   politicaEntrega: string;
   /** `null` esconde o banner. */
-  bannerSazonal: SeasonalBanner | null;
 }
 
 export interface SeasonalBanner {
   destaque: string;
   titulo: string;
   texto: string;
-  cta: NavLink;
+  /** Sem categoria escolhida no painel, a faixa fica sem botão. */
+  cta?: NavLink;
   imagem?: string;
 }
 
 export interface Step {
   titulo: string;
   texto: string;
-}
-
-export interface Testimonial {
-  quote: string;
-  author: string;
-  occasion: string;
-  photo?: string;
 }
 
 export interface InstagramPost {

@@ -1,4 +1,4 @@
-import type { NavLink, Step, StoreConfig, Testimonial } from "@/lib/types";
+import type { NavLink, Step, StoreConfig } from "@/lib/types";
 
 /*
  * Configuração da loja e integrações ainda simuladas (newsletter e avise-me;
@@ -18,18 +18,12 @@ export const store: StoreConfig = {
     mensagemPadrao: "Olá! Vim pelo site da Mimos da Tati.",
   },
   email: "mimosdatatimococa@gmail.com",
-  instagram: "mimosdethatymococa",
+  instagram: "mimosdatatimococa",
   cnpj: "54.179.951/0001-07",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
   referenciaMaxMB: 8,
   prazoProducaoPadrao: "[X]",
   politicaEntrega: "[Prazo de produção, opções de envio e retirada, política para produtos personalizados.]",
-  bannerSazonal: {
-    destaque: "coleção de fim de ano",
-    titulo: "Natal com mimos para presentear quem você ama",
-    texto: "Encomendas abertas até [data limite]. Garanta a produção a tempo da sua ceia.",
-    cta: { label: "Conhecer a coleção", href: "/categoria/datas-especiais" },
-  },
 };
 
 export const helpLinks: NavLink[] = [
@@ -46,12 +40,6 @@ export const steps: Step[] = [
   { titulo: "Receba em casa", texto: "Produzimos com carinho e enviamos para todo o Brasil." },
 ];
 
-/** Em produção, lista vazia esconde a seção inteira. */
-export const testimonials: Testimonial[] = Array.from({ length: 3 }, () => ({
-  quote: "[Depoimento real de cliente, com a ocasião e o produto comprado]",
-  author: "[Nome da cliente]",
-  occasion: "[Ocasião · produto]",
-}));
 
 /** Simula a inscrição na newsletter (ferramenta de e-mail a definir). */
 export async function subscribeNewsletterMock(email: string): Promise<void> {
