@@ -96,9 +96,13 @@ Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, r
 
 Na página do produto, a cliente pode enviar uma imagem do convite ou da decoração (JPG, PNG ou WebP, até 8 MB, 20 envios por hora por IP). Ela vai direto para a pasta privada `referencias/` do S3 e o pedido guarda só a chave. A imagem aparece na confirmação do pedido (para quem tem o link com o token) e no detalhe do pedido no painel, sempre por links temporários de 1 hora. Precisa da regra "ReferenciasDasClientes" de `deploy/iam-policy.json` no papel da instância; a política pública do bucket não inclui essa pasta.
 
+### Coleções sazonais
+
+Em Painel → Página inicial → Coleções sazonais: até 6 faixas (Natal, Páscoa, Dia das Mães...), cada uma com destaque, título, texto, foto, categoria do botão e a opção "Ativa". As ativas aparecem na página inicial na ordem da lista; desmarcar "Ativa" esconde a faixa sem perder o texto.
+
 ### Instagram na página inicial
 
-Os 6 posts mais recentes vêm da API oficial do Instagram (`src/server/instagram.ts`), com `INSTAGRAM_TOKEN` no `.env.production`. A conta precisa ser Comercial ou de Criador de conteúdo. Para gerar o token: em developers.facebook.com, crie um app do tipo "Empresa", adicione o produto "Instagram" (API com login do Instagram), em "Gerar tokens de acesso" adicione a conta da loja e copie o token. Ele dura 60 dias, mas a loja renova sozinha a cada 7 e guarda o novo no banco. Os posts ficam 1 hora em memória. Sem token, ou com a API fora do ar, a seção mostra só o convite para seguir.
+Os 6 posts mais recentes vêm da API oficial do Instagram (`src/server/instagram.ts`), com `INSTAGRAM_TOKEN` no `.env.production`. A conta precisa ser Comercial ou de Criador de conteúdo. Para gerar o token: em developers.facebook.com, crie um app do tipo "Empresa", adicione o produto "Instagram" (API com login do Instagram), em "Gerar tokens de acesso" adicione a conta da loja e copie o token. Ele dura 60 dias, mas a loja renova sozinha a cada 7 e guarda o novo no banco. Os posts ficam 1 hora em memória. Sem token, ou com a API fora do ar, a seção some da página.
 
 ### No painel (`/admin/pedidos`)
 
