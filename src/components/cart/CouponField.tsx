@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/format";
 
 export interface CouponFieldProps {
-  /** Devolve `true` se o cupom foi aceito. */
-  onApply: (code: string) => Promise<boolean>;
+  /** Devolve `null` se o cupom foi aceito, ou a mensagem do motivo (expirado, pedido mínimo...). */
+  onApply: (code: string) => Promise<string | null>;
   applied?: string | null;
 }
 
@@ -25,9 +25,9 @@ export function CouponField({ onApply, applied }: CouponFieldProps) {
     }
     setLoading(true);
     try {
-      const ok = await onApply(code.trim());
-      setError(ok ? undefined : "Cupom inválido ou expirado.");
-      if (ok) setCode("");
+      const erro = await onApply(code.trim());
+      setError(erro ?? undefined);
+      if (!erro) setCode("");
     } finally {
       setLoading(false);
     }

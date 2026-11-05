@@ -2,7 +2,6 @@
 
 import { headers } from "next/headers";
 import { getCurrentUser } from "@/server/auth";
-import { findCoupon } from "@/server/coupons";
 import { db } from "@/server/db";
 import { createOrder, type CreateOrderResult } from "@/server/orders";
 import { createCharge } from "@/server/payments";
@@ -18,5 +17,5 @@ export async function placeOrderAction(input: unknown): Promise<CreateOrderResul
   }
   const user = await getCurrentUser();
   const payload = typeof input === "object" && input ? { ...input, usuarioId: user?.id ?? null } : input;
-  return createOrder(db, payload, { quoteShipping, findCoupon, createCharge });
+  return createOrder(db, payload, { quoteShipping, createCharge });
 }

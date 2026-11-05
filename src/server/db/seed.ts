@@ -1,7 +1,7 @@
 import type { ProductBadge, ProductColor } from "@/lib/types";
 import type { Database } from "./connect";
 import { eq } from "drizzle-orm";
-import { categorias, produtos } from "./schema";
+import { categorias, cupons, produtos } from "./schema";
 
 /*
  * Catálogo inicial (os produtos de exemplo do design). Só é importado num banco
@@ -80,6 +80,8 @@ export function applyTestPrices(db: Database) {
   for (const [slug, [base, pix]] of Object.entries(precos)) {
     db.update(produtos).set({ precoBaseCentavos: base, precoPixCentavos: pix, prazoProducaoDias: 5 }).where(eq(produtos.slug, slug)).run();
   }
+  // Cupom dos testes de ponta a ponta
+  db.insert(cupons).values({ codigo: "MIMO10", tipo: "percentual", valor: 10 }).onConflictDoNothing().run();
   // Os testes de ponta a ponta compram 20 caixas por pedido, várias vezes por execução
   db.update(produtos).set({ estoque: 10_000 }).where(eq(produtos.slug, "caixa-milk-personalizada")).run();
 }

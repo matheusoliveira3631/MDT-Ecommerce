@@ -29,6 +29,13 @@
       "when": 1793411259699,
       "tag": "0003_loja_e_frete",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793922539036,
+      "tag": "0004_cupons",
+      "breakpoints": true
     }
   ]
 }

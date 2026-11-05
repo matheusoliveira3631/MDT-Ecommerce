@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 import { createDatabase, type Database } from "../../src/server/db/connect";
-import { pedidoItens, pedidos, produtos } from "../../src/server/db/schema";
+import { cupons, pedidoItens, pedidos, produtos } from "../../src/server/db/schema";
 import { seedCatalog } from "../../src/server/db/seed";
 import { applyPaymentUpdate, createOrder, getOrderForCustomer, type OrderDeps } from "../../src/server/orders";
 import type { Charge } from "../../src/server/payments";
@@ -14,7 +14,6 @@ const deps = (overrides: Partial<OrderDeps> = {}): OrderDeps => ({
     { servico: "PAC", prazo: "8 dias úteis", valorCentavos: 2590 },
     { servico: "SEDEX", prazo: "3 dias úteis", valorCentavos: null },
   ],
-  findCoupon: (code) => (code.toUpperCase() === "MIMO10" ? { codigo: "MIMO10", tipo: "percentual", valor: 10 } : null),
   createCharge: async (): Promise<Charge> => ({ id: `cob_${++chargeCount}`, status: "pendente", instrucoes: { pixCopiaECola: "abc" } }),
   ...overrides,
 });
@@ -45,6 +44,7 @@ test.beforeEach(() => {
     .set({ precoBaseCentavos: 550, precoPixCentavos: 500, estoque: 30 })
     .where(eq(produtos.slug, "caixa-milk-personalizada"))
     .run();
+  db.insert(cupons).values({ codigo: "MIMO10", tipo: "percentual", valor: 10 }).run();
 });
 
 test("o total sai do banco, não do que o navegador manda", async () => {

@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { quoteShippingAction, validateCouponAction } from "@/app/actions/loja";
 import { useProducts } from "@/components/catalog/useProducts";
 import { orderTotals } from "@/lib/cart";
+import { reaisToCents } from "@/lib/pricing";
 import { pluralItens } from "@/lib/format";
 import type { ShippingOption } from "@/lib/types";
 import { CartLineItem } from "./CartLineItem";
@@ -155,9 +156,10 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           <CouponField
             applied={coupon?.codigo}
             onApply={async (code) => {
-              const result = await validateCouponAction(code);
-              if (result) setCoupon(result);
-              return result != null;
+              const result = await validateCouponAction(code, reaisToCents(totals.subtotal));
+              if (!result.ok) return result.erro;
+              setCoupon(result.rule);
+              return null;
             }}
           />
         </OrderSummary>

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { TEST_USERS } from "../../playwright.config";
-import { loginAs } from "./helpers";
+import { addToCart, loginAs } from "./helpers";
 
 const fixture = (name: string) => path.join(__dirname, "..", "fixtures", name);
 
@@ -216,4 +216,51 @@ test("coleções sazonais: o painel cria, ordena e desliga as faixas da página 
   await expect(page.getByText("Coleções salvas")).toBeVisible();
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Natal com mimos para presentear quem você ama" })).toBeVisible();
+});
+
+test("cupom cadastrado no painel vale na sacola, com compra mínima e pausa", async ({ page, browser }, testInfo) => {
+  test.setTimeout(60_000);
+  const codigo = `BEMVINDA${testInfo.workerIndex}${testInfo.repeatEachIndex}${Date.now().toString(36).slice(-4)}`.toUpperCase();
+  await loginAs(page, TEST_USERS.admin, "/admin/cupons");
+  await page.getByRole("button", { name: "Novo cupom" }).click();
+  await page.getByLabel("Código").fill(codigo);
+  await page.getByLabel("Tipo de desconto").selectOption("fixo");
+  await page.getByLabel("Desconto (R$)").pressSequentially("500");
+  await page.getByLabel("Compra mínima (R$)").pressSequentially("20000");
+  await page.getByRole("button", { name: "Criar cupom" }).click();
+  await expect(page.getByText("Cupom criado")).toBeVisible();
+  const item = page.getByRole("listitem").filter({ hasText: codigo });
+  await expect(item).toContainText("R$ 5,00 de desconto");
+  await expect(item).toContainText("compras a partir de R$ 200,00");
+
+  // Na sacola (outra cliente): 20 × R$ 5,50 = R$ 110,00, abaixo do mínimo
+  const clienteContext = await browser.newContext();
+  const cliente = await clienteContext.newPage();
+  await addToCart(cliente, "Bia");
+  await cliente.goto("/sacola");
+  await cliente.getByLabel("Cupom de desconto").fill(codigo.toLowerCase());
+  await cliente.getByRole("button", { name: "Aplicar" }).click();
+  await expect(cliente.getByText(/Este cupom vale para compras a partir de R\$\s200,00\./)).toBeVisible();
+
+  // Sem compra mínima, o cupom entra
+  await item.getByRole("button", { name: `Editar ${codigo}` }).click();
+  await page.getByLabel("Compra mínima (R$)").fill("");
+  await page.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(page.getByText("Cupom salvo")).toBeVisible();
+  await cliente.getByRole("button", { name: "Aplicar" }).click();
+  await expect(cliente.getByText(`Cupom ${codigo} aplicado`)).toBeVisible();
+
+  // Pausado, para de valer na hora
+  await page.getByRole("button", { name: `Editar ${codigo}` }).click();
+  await page.getByLabel("Ativo").uncheck();
+  await page.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: codigo })).toContainText("Pausado");
+  await cliente.getByLabel("Cupom de desconto").fill(codigo);
+  await cliente.getByRole("button", { name: "Aplicar" }).click();
+  await expect(cliente.getByText("Cupom inválido.")).toBeVisible();
+  await clienteContext.close();
+
+  // Nunca usado: pode excluir
+  await page.getByRole("button", { name: `Excluir ${codigo}` }).click();
+  await expect(page.getByRole("listitem").filter({ hasText: codigo })).toHaveCount(0);
 });

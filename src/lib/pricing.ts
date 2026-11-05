@@ -16,6 +16,8 @@ export interface CouponRule {
   codigo: string;
   tipo: "percentual" | "fixo";
   valor: number;
+  /** Subtotal mínimo em centavos; abaixo dele o cupom não desconta nada. */
+  minimoCentavos?: number | null;
 }
 
 export interface Totals {
@@ -35,6 +37,7 @@ const sum = (values: Array<number | null>) =>
   values.some((v) => v == null) ? null : values.reduce<number>((acc, v) => acc + (v as number), 0);
 
 export function couponDiscount(rule: CouponRule, subtotal: number): number {
+  if (rule.minimoCentavos != null && subtotal < rule.minimoCentavos) return 0;
   const raw = rule.tipo === "percentual" ? Math.round((subtotal * rule.valor) / 100) : rule.valor;
   // O desconto nunca passa do subtotal
   return Math.max(0, Math.min(raw, subtotal));

@@ -8,6 +8,7 @@ import { computeTotals, type CouponRule } from "@/lib/pricing";
 import { REFERENCE_PATTERN } from "@/lib/uploads";
 import type { Database } from "./db/connect";
 import { pedidoHistorico, pedidoItens, pedidos, produtos, type PedidoRow } from "./db/schema";
+import { checkCoupon } from "./coupons";
 import type { Charge, ChargeRequest } from "./payments";
 import type { ShippingItem, ShippingQuote } from "./shipping";
 
@@ -20,7 +21,6 @@ import type { ShippingItem, ShippingQuote } from "./shipping";
 
 export interface OrderDeps {
   quoteShipping: (cep: string, itens: ShippingItem[]) => Promise<ShippingQuote[]>;
-  findCoupon: (code: string) => CouponRule | null;
   createCharge: (request: ChargeRequest) => Promise<Charge>;
 }
 
@@ -147,22 +147,27 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
     if (!frete) throw new OrderError("Esse frete não está disponível para o CEP. Escolha de novo.");
     if (frete.valorCentavos == null) throw new OrderError("O valor do frete para esse CEP ainda não está disponível.");
 
+    const priced = lines.map((l) => ({ quantidade: l.item.quantidade, unitCents: l.unit, unitPixCents: null }));
+    const subtotalCentavos = computeTotals(priced, 0, null).subtotal;
+    const cpf = input.cliente.cpf.replace(/\D/g, "");
     let coupon: CouponRule | null = null;
     if (input.cupom) {
-      coupon = deps.findCoupon(input.cupom);
-      if (!coupon) throw new OrderError("O cupom não é mais válido. Remova-o na sacola.");
+      const check = checkCoupon(db, input.cupom, { subtotalCentavos, cpf });
+      if (!check.ok) throw new OrderError(`${check.erro} Remova o cupom na sacola para continuar.`);
+      coupon = check.rule;
     }
 
-    const totals = computeTotals(
-      lines.map((l) => ({ quantidade: l.item.quantidade, unitCents: l.unit, unitPixCents: null })),
-      frete.valorCentavos,
-      coupon,
-    );
+    const totals = computeTotals(priced, frete.valorCentavos, coupon);
     if (totals.total == null || totals.subtotal == null) throw new OrderError("Não foi possível calcular o total.");
     if (totals.total <= 0) throw new OrderError("O total do pedido precisa ser maior que zero.");
 
     const token = randomBytes(24).toString("base64url");
     const pedidoId = db.transaction((tx) => {
+      // Limite de usos conferido de novo aqui: dois pedidos ao mesmo tempo não passam do limite
+      if (coupon) {
+        const recheck = checkCoupon(tx, coupon.codigo, { subtotalCentavos, cpf });
+        if (!recheck.ok) throw new OrderError(`${recheck.erro} Remova o cupom na sacola para continuar.`);
+      }
       const id = tx
         .insert(pedidos)
         .values({

@@ -61,7 +61,6 @@ export default defineConfig({
       S3_BUCKET: "",
       // Integrações simuladas com valores, para o pedido poder ser fechado
       FRETE_SIMULADO: "PAC:2590:8,SEDEX:4590:3",
-      CUPONS_SIMULADOS: "MIMO10:10%",
       PAGAMENTO_WEBHOOK_SECRET: TEST_WEBHOOK_SECRET,
     },
   },

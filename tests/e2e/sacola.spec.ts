@@ -25,7 +25,7 @@ test("remover com desfazer, cupom e persistência", async ({ page }) => {
 
   await page.getByLabel("Cupom de desconto").fill("ERRADO");
   await page.getByRole("button", { name: "Aplicar" }).click();
-  await expect(page.getByText("Cupom inválido ou expirado.")).toBeVisible();
+  await expect(page.getByText("Cupom inválido.")).toBeVisible();
   await page.getByLabel("Cupom de desconto").fill("mimo10");
   await page.getByRole("button", { name: "Aplicar" }).click();
   await expect(page.getByText("Cupom MIMO10 aplicado")).toBeVisible();

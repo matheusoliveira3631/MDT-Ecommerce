@@ -4,7 +4,8 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import type { CouponRule } from "@/lib/pricing";
 import type { ShippingResult } from "@/lib/types";
-import { findCoupon } from "@/server/coupons";
+import { checkCoupon } from "@/server/coupons";
+import { db } from "@/server/db";
 import { rateLimit } from "@/server/rate-limit";
 import { quoteShipping, ShippingUnavailableError } from "@/server/shipping";
 import { createReferenceUpload, type ReferenceTicket } from "@/server/storage";
@@ -39,8 +40,17 @@ export async function quoteShippingAction(cep: string, itens: unknown): Promise<
   }
 }
 
-export async function validateCouponAction(code: string): Promise<CouponRule | null> {
-  return findCoupon(String(code).slice(0, 40));
+/** Cupom digitado na sacola. O pedido confere de novo no fechamento (limite de usos, uma vez por cliente). */
+export async function validateCouponAction(
+  code: string,
+  subtotalCentavos?: number | null,
+): Promise<{ ok: true; rule: CouponRule } | { ok: false; erro: string }> {
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  // Evita adivinhar códigos no chute: 20 tentativas a cada 10 minutos por IP
+  if (!rateLimit(`cupom:${ip}`, 20, 10 * 60 * 1000).ok) return { ok: false, erro: "Muitas tentativas. Espere alguns minutos." };
+  const subtotal = typeof subtotalCentavos === "number" && Number.isFinite(subtotalCentavos) ? subtotalCentavos : null;
+  const check = checkCoupon(db, String(code).slice(0, 40), { subtotalCentavos: subtotal });
+  return check.ok ? { ok: true, rule: check.rule } : check;
 }
 
 /** Envio da imagem de referência da cliente (convite, decoração), antes de ir para a sacola. */

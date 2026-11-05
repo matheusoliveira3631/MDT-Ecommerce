@@ -105,6 +105,26 @@ export const configuracoes = sqliteTable("configuracoes", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+/** Cupons de desconto cadastrados no painel. O uso é contado pelos pedidos não cancelados. */
+export const cupons = sqliteTable("cupons", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  /** Sempre em maiúsculas. */
+  codigo: text("codigo").notNull().unique(),
+  /** Anotação interna (ex.: "parceria com a loja X"); a cliente não vê. */
+  descricao: text("descricao").notNull().default(""),
+  tipo: text("tipo", { enum: ["percentual", "fixo"] }).notNull(),
+  /** Percentual: 10 = 10%. Fixo: centavos. */
+  valor: integer("valor").notNull(),
+  pedidoMinimoCentavos: integer("pedido_minimo_centavos"),
+  inicioEm: integer("inicio_em", { mode: "timestamp_ms" }),
+  fimEm: integer("fim_em", { mode: "timestamp_ms" }),
+  /** Total de pedidos que podem usar o cupom; vazio = sem limite. */
+  limiteUsos: integer("limite_usos"),
+  umaVezPorCliente: integer("uma_vez_por_cliente", { mode: "boolean" }).notNull().default(false),
+  ativo: integer("ativo", { mode: "boolean" }).notNull().default(true),
+  criadoEm: criadoEm(),
+});
+
 export const STATUS_PEDIDO = [
   "aguardando_pagamento",
   "aguardando_arte",
@@ -194,6 +214,7 @@ export const pedidoHistorico = sqliteTable(
   (t) => [index("pedido_historico_pedido_idx").on(t.pedidoId)],
 );
 
+export type CupomRow = typeof cupons.$inferSelect;
 export type PedidoRow = typeof pedidos.$inferSelect;
 export type PedidoHistoricoRow = typeof pedidoHistorico.$inferSelect;
 export type PedidoItemRow = typeof pedidoItens.$inferSelect;

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { deleteCoupon, saveCoupon, type CouponSaveResult } from "@/server/admin-coupons";
 import { cancelOrderAdmin, updateOrderStatus, type OrderActionResult } from "@/server/admin-orders";
 import { AccessDeniedError, requireAdmin, type SessionUser } from "@/server/auth";
 import { db } from "@/server/db";
@@ -71,6 +72,18 @@ export async function saveHomeSettingsAction(input: unknown): Promise<SettingsRe
   const result = await guarded(() => saveHomeSettings(input));
   if (result.ok) revalidatePath("/");
   return result;
+}
+
+/** Cupons de desconto. */
+export async function saveCouponAction(input: unknown): Promise<CouponSaveResult | ActionError> {
+  return guarded(async () => saveCoupon(input));
+}
+
+export async function deleteCouponAction(id: number): Promise<{ ok: true } | ActionError> {
+  return guarded(async () => {
+    const result = deleteCoupon(id);
+    return result.ok ? result : { ok: false as const, errors: { form: result.error } };
+  });
 }
 
 /** Coleções sazonais (faixas da página inicial). */

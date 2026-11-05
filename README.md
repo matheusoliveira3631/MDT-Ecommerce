@@ -96,6 +96,10 @@ Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, r
 
 Na página do produto, a cliente pode enviar uma imagem do convite ou da decoração (JPG, PNG ou WebP, até 8 MB, 20 envios por hora por IP). Ela vai direto para a pasta privada `referencias/` do S3 e o pedido guarda só a chave. A imagem aparece na confirmação do pedido (para quem tem o link com o token) e no detalhe do pedido no painel, sempre por links temporários de 1 hora. Precisa da regra "ReferenciasDasClientes" de `deploy/iam-policy.json` no papel da instância; a política pública do bucket não inclui essa pasta.
 
+### Cupons
+
+Em Painel → Cupons: código, desconto em % ou em R$, compra mínima, período de validade (dias inteiros, horário de Brasília), limite total de usos, "uma vez por cliente" (pelo CPF) e ativo/pausado. A sacola explica por que um cupom não vale (expirado, compra mínima...), e o fechamento do pedido confere tudo de novo, com o limite de usos dentro da transação. O uso conta pelos pedidos não cancelados; cupom já usado não pode ser excluído nem trocar de código, só pausado.
+
 ### Coleções sazonais
 
 Em Painel → Página inicial → Coleções sazonais: até 6 faixas (Natal, Páscoa, Dia das Mães...), cada uma com destaque, título, texto, foto, categoria do botão e a opção "Ativa". As ativas aparecem na página inicial na ordem da lista; desmarcar "Ativa" esconde a faixa sem perder o texto.
@@ -139,4 +143,4 @@ Sem token, o frete vem de `FRETE_SIMULADO`. Nesse caso, o pedido só fecha com e
 
 ## Ainda simulado
 
-Frete sem `MELHOR_ENVIO_TOKEN` (`FRETE_SIMULADO`), cupons (`src/server/coupons.ts`, de `CUPONS_SIMULADOS`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar, e referências de clientes que não fecharam o pedido, ficam no armazenamento (falta uma limpeza periódica).
+Frete sem `MELHOR_ENVIO_TOKEN` (`FRETE_SIMULADO`), gateway de pagamento (`src/server/payments.ts`: Pix e boleto com dados de exemplo; o formato do webhook precisa ser adaptado ao gateway escolhido), newsletter e "Avise-me". A sacola fica no `localStorage` e os dados do checkout no `sessionStorage`; o pedido em si fica no banco. Pedidos não pagos não expiram sozinhos (falta um agendamento que cancele os vencidos e devolva o estoque). Os dados do cartão devem entrar pelos campos seguros do gateway escolhido, nunca por um formulário da loja. Fotos enviadas no painel e descartadas antes de salvar, e referências de clientes que não fecharam o pedido, ficam no armazenamento (falta uma limpeza periódica).

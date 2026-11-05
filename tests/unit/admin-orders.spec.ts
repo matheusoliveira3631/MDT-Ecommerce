@@ -18,7 +18,6 @@ let chargeCount = 0;
 
 const deps: OrderDeps = {
   quoteShipping: async () => [{ servico: "PAC", prazo: "8 dias úteis", valorCentavos: 2590 }],
-  findCoupon: () => null,
   createCharge: async () => ({ id: `cob_${++chargeCount}`, status: "pendente", instrucoes: {} }),
 };
 
