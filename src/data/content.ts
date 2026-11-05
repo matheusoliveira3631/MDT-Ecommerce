@@ -62,7 +62,10 @@ export function helpPages(store: StoreConfig): ContentPage[] {
         },
         {
           titulo: "Opções de envio",
-          paragrafos: ["[Transportadoras e serviços disponíveis, retirada no local (se houver) e endereço de retirada.]"],
+          paragrafos: [
+            "Enviamos de Mococa/SP pelos Correios e transportadoras parceiras. O valor e o prazo de cada opção aparecem quando você informa o CEP, na página do produto, na sacola ou no checkout.",
+            `Para Mococa e região, você também pode retirar sem custo: escolha "Retirada em Mococa/SP" no frete e combinamos dia e horário pelo WhatsApp ${store.whatsapp.exibicao}.`,
+          ],
         },
         {
           titulo: "Rastreamento",

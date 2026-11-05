@@ -11,12 +11,17 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import { helpLinks, instagramPosts, steps, store, testimonials } from "@/data/mock";
+import { helpLinks, steps, store, testimonials } from "@/data/mock";
 import { listarCategorias, produtosEmDestaque } from "@/server/catalog";
+import { recentInstagramPosts } from "@/server/instagram";
 import { getHeroImage } from "@/server/settings";
 
 export default async function Home() {
-  const [categories, featuredProducts] = await Promise.all([listarCategorias(), produtosEmDestaque(4)]);
+  const [categories, featuredProducts, instagramPosts] = await Promise.all([
+    listarCategorias(),
+    produtosEmDestaque(4),
+    recentInstagramPosts(6),
+  ]);
   const hero = getHeroImage();
   return (
     <>

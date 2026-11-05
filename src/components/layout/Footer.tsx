@@ -80,7 +80,9 @@ export function Footer(props: FooterProps) {
           <a href={`https://wa.me/${store.whatsapp.numero}`} target="_blank" rel="noopener noreferrer" className={footerLink}>
             WhatsApp {store.whatsapp.exibicao}
           </a>
-          <span>{store.email}</span>
+          <a href={`mailto:${store.email}`} className={`${footerLink} break-all`}>
+            {store.email}
+          </a>
           <a href={`https://www.instagram.com/${store.instagram}/`} target="_blank" rel="noopener noreferrer" className={footerLink}>
             Instagram @{store.instagram}
           </a>

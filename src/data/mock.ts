@@ -1,4 +1,4 @@
-import type { InstagramPost, NavLink, Step, StoreConfig, Testimonial } from "@/lib/types";
+import type { NavLink, Step, StoreConfig, Testimonial } from "@/lib/types";
 
 /*
  * Configuração da loja e integrações ainda simuladas (newsletter e avise-me;
@@ -17,9 +17,9 @@ export const store: StoreConfig = {
     exibicao: "(19) 99593-9494",
     mensagemPadrao: "Olá! Vim pelo site da Mimos da Tati.",
   },
-  email: "[contato@seudominio.com.br]",
+  email: "mimosdatatimococa@gmail.com",
   instagram: "mimosdethatymococa",
-  cnpj: "[00.000.000/0001-00]",
+  cnpj: "54.179.951/0001-07",
   meiosPagamento: ["Pix", "Cartão de crédito", "Boleto"],
   referenciaMaxMB: 8,
   prazoProducaoPadrao: "[X]",
@@ -32,14 +32,12 @@ export const store: StoreConfig = {
   },
 };
 
-
 export const helpLinks: NavLink[] = [
   { label: "Prazos de produção", href: "/ajuda/prazos" },
   { label: "Frete e entrega", href: "/ajuda/frete" },
   { label: "Trocas e cancelamentos", href: "/ajuda/trocas" },
   { label: "Perguntas frequentes", href: "/ajuda/perguntas-frequentes" },
 ];
-
 
 export const steps: Step[] = [
   { titulo: "Escolha o produto", texto: "Navegue pelas categorias e escolha a peça e a quantidade." },
@@ -54,14 +52,6 @@ export const testimonials: Testimonial[] = Array.from({ length: 3 }, () => ({
   author: "[Nome da cliente]",
   occasion: "[Ocasião · produto]",
 }));
-
-/** Em produção, lista vazia esconde a seção inteira. */
-export const instagramPosts: InstagramPost[] = Array.from({ length: 6 }, (_, i) => ({
-  href: `https://www.instagram.com/${store.instagram}/`,
-  alt: `Post ${i + 1} do Instagram`,
-}));
-
-
 
 /** Simula a inscrição na newsletter (ferramenta de e-mail a definir). */
 export async function subscribeNewsletterMock(email: string): Promise<void> {
