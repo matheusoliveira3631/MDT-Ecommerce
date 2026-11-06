@@ -16,6 +16,7 @@ const defaultLabels: Record<BadgeVariant, string> = {
   new: "Novo",
   soldout: "Esgotado",
   deadline: "",
+  sale: "Promoção",
 };
 
 const filled = "px-3 py-1.5";
@@ -27,6 +28,7 @@ const styles: Record<BadgeVariant, { base: string; onImage?: string }> = {
   new: { base: cn(outlined, "border-rose-300 bg-white text-primary") },
   soldout: { base: cn(filled, "bg-disabled-bg text-soldout-fg") },
   deadline: { base: cn(outlined, "border-rose-200 bg-rose-50 text-ink"), onImage: cn(outlined, "border-rose-200 bg-white text-ink") },
+  sale: { base: cn(filled, "bg-lilac-ink text-white") },
 };
 
 export function Badge({ variant, label, onImage, className }: BadgeProps) {

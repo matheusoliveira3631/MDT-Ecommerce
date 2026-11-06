@@ -1,4 +1,5 @@
 import { centsToReais, computeTotals, reaisToCents, type CouponRule } from "./pricing";
+import type { CartTier } from "./promo";
 import type { Product, ShippingOption } from "./types";
 
 /** Personalização de um item da sacola. */
@@ -67,10 +68,22 @@ export function cartTotals(lines: CartLine[], getProduct: (slug: string) => Prod
 export interface OrderTotals extends CartTotals {
   /** `undefined` enquanto o frete não foi escolhido. */
   shipping: number | null | undefined;
-  /** `undefined` sem cupom. */
+  /** `undefined` sem cupom e sem desconto progressivo. */
   discount: number | null | undefined;
+  /** "Cupom MIMO10" ou "Desconto progressivo (10%)". */
+  discountLabel: string | undefined;
+  /** O cupom aplicado perdeu para o desconto progressivo (os dois não somam). */
+  couponOutdone: boolean;
+  /** Aviso da próxima faixa: quanto falta (reais) e o percentual. */
+  nextTier: { falta: number; percentual: number } | null;
   total: number | null;
   totalPix: number | null;
+}
+
+export function discountLabel(source: "cupom" | "progressivo" | undefined, coupon: CouponRule | null | undefined, tier: CartTier | null) {
+  if (source === "cupom" && coupon) return `Cupom ${coupon.codigo}`;
+  if (source === "progressivo" && tier) return `Desconto progressivo (${tier.percentual}%)`;
+  return undefined;
 }
 
 /**
@@ -82,6 +95,7 @@ export function orderTotals(
   getProduct: (slug: string) => Product | undefined,
   shipping: ShippingOption | null | undefined,
   coupon: CouponRule | null | undefined,
+  tiers: CartTier[] = [],
 ): OrderTotals {
   const t = computeTotals(
     lines.map((l) => {
@@ -90,6 +104,7 @@ export function orderTotals(
     }),
     shipping ? reaisToCents(shipping.valor) : undefined,
     coupon,
+    tiers,
   );
   return {
     itens: t.itens,
@@ -97,6 +112,12 @@ export function orderTotals(
     subtotalPix: centsToReais(t.subtotalPix),
     shipping: t.shipping === undefined ? undefined : centsToReais(t.shipping),
     discount: t.discount === undefined ? undefined : centsToReais(t.discount),
+    discountLabel: discountLabel(t.discountSource, coupon, t.tier),
+    couponOutdone: Boolean(coupon) && t.discountSource === "progressivo",
+    nextTier:
+      t.nextTier && t.subtotal != null
+        ? { falta: (t.nextTier.minimoCentavos - t.subtotal) / 100, percentual: t.nextTier.percentual }
+        : null,
     total: centsToReais(t.total),
     totalPix: centsToReais(t.totalPix),
   };

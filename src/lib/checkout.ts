@@ -59,6 +59,8 @@ export interface OrderView {
   freteServico: string;
   descontoCentavos: number;
   cupom: string | null;
+  /** "Cupom MIMO10" ou "Desconto progressivo (10%)". */
+  descontoDescricao: string | null;
   totalCentavos: number;
   /** Código de rastreio, quando o pedido já foi enviado. */
   rastreio: string | null;

@@ -1,7 +1,9 @@
 import "server-only";
 import { asc, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { endOfDayBR, startOfDayBR } from "@/lib/dates";
 import { slugify } from "@/lib/format";
+import { promoActive } from "@/lib/promo";
 import { db } from "./db";
 import { categorias, produtoFotos, produtos } from "./db/schema";
 import { KEY_PATTERN, publicUrl, removeFile } from "./storage";
@@ -10,6 +12,13 @@ import { KEY_PATTERN, publicUrl, removeFile } from "./storage";
  * Escrita do catálogo pelo admin. Quem chama (as Server Actions em
  * src/app/admin/actions.ts) já passou por requireAdmin().
  */
+
+/** Data do painel: "AAAA-MM-DD" ou vazio (sem data). */
+export const dateField = z
+  .string()
+  .regex(/^(\d{4}-\d{2}-\d{2})?$/, "Data inválida.")
+  .optional()
+  .transform((v) => v || null);
 
 const cents = z.number().int().min(0, "O preço não pode ser negativo.").max(10_000_000).nullable();
 const photoKey = z.string().regex(KEY_PATTERN, "Foto inválida. Envie de novo.");
@@ -32,6 +41,9 @@ export const productSchema = z
     precoBaseCentavos: cents,
     precoPixCentavos: cents,
     precoVaria: z.boolean(),
+    precoPromoCentavos: cents,
+    promoInicio: dateField,
+    promoFim: dateField,
     pedidoMinimo: z.number().int().min(1, "O mínimo é 1.").max(10_000),
     prazoProducaoDias: z.number().int().min(0).max(365, "Use até 365 dias.").nullable(),
     estoque: z.number().int().min(0, "O estoque não pode ser negativo.").max(100_000),
@@ -62,6 +74,16 @@ export const productSchema = z
     fotos: z.array(z.object({ chave: photoKey, alt: z.string().trim().max(200) })).max(12, "Use até 12 fotos."),
   })
   .superRefine((p, ctx) => {
+    if (p.precoPromoCentavos != null) {
+      if (p.precoBaseCentavos == null) {
+        ctx.addIssue({ code: "custom", path: ["precoPromoCentavos"], message: "Cadastre o preço normal antes da promoção." });
+      } else if (p.precoPromoCentavos >= p.precoBaseCentavos) {
+        ctx.addIssue({ code: "custom", path: ["precoPromoCentavos"], message: "O preço promocional precisa ser menor que o preço normal." });
+      }
+    }
+    if (p.promoInicio && p.promoFim && p.promoFim < p.promoInicio) {
+      ctx.addIssue({ code: "custom", path: ["promoFim"], message: "O fim precisa ser depois do início." });
+    }
     if (p.precoBaseCentavos != null && p.precoPixCentavos != null && p.precoPixCentavos > p.precoBaseCentavos) {
       ctx.addIssue({ code: "custom", path: ["precoPixCentavos"], message: "O preço no Pix não pode ser maior que o preço normal." });
     }
@@ -124,7 +146,7 @@ export function adminListProducts() {
     : [];
   return rows.map(({ produto, categoria }) => {
     const capa = capas.find((f) => f.produtoId === produto.id);
-    return { ...produto, categoria, capaUrl: capa ? publicUrl(capa.chave) : null };
+    return { ...produto, categoria, capaUrl: capa ? publicUrl(capa.chave) : null, emPromocao: promoActive(produto) };
   });
 }
 
@@ -199,8 +221,13 @@ export async function deleteCategory(id: number): Promise<{ ok: true } | { ok: f
 export async function saveProduct(raw: unknown): Promise<SaveResult> {
   const parsed = productSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, errors: toFieldErrors(parsed.error) };
-  const { id, fotos, ...fields } = parsed.data;
-  const data = { ...fields, slug: resolveSlug(produtos, fields.nome, id) };
+  const { id, fotos, promoInicio, promoFim, ...fields } = parsed.data;
+  const data = {
+    ...fields,
+    slug: resolveSlug(produtos, fields.nome, id),
+    promoInicioEm: promoInicio ? startOfDayBR(promoInicio) : null,
+    promoFimEm: promoFim ? endOfDayBR(promoFim) : null,
+  };
   if (!db.select({ id: categorias.id }).from(categorias).where(eq(categorias.id, data.categoriaId)).get()) {
     return { ok: false, errors: { categoriaId: "Escolha a categoria." } };
   }

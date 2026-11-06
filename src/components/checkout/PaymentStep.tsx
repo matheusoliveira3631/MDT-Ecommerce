@@ -38,7 +38,7 @@ function ReviewCard({ title, children }: { title: string; children: ReactNode })
 
 function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps & { onPlacing: (v: boolean) => void }) {
   const router = useRouter();
-  const { lines, coupon, clearCart } = useCart();
+  const { lines, coupon, clearCart, tiers } = useCart();
   const catalog = useProducts(lines.map((l) => l.produtoSlug));
   const { cliente, endereco, frete, ensureIdempotencyKey, finishCheckout } = useCheckout();
   const [method, setMethod] = useState<PaymentMethod>("pix");
@@ -49,7 +49,7 @@ function Step({ parcelas, descontoPix, trocasHref, onPlacing }: PaymentStepProps
 
   // CheckoutGate garante que os três existem
   if (!cliente || !endereco || !frete) return null;
-  const totals = orderTotals(lines, catalog.get, frete, coupon);
+  const totals = orderTotals(lines, catalog.get, frete, coupon, tiers);
 
   const methods: Array<{ value: PaymentMethod; detail: ReactNode }> = [
     {

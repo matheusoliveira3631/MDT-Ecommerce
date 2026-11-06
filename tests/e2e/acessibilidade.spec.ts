@@ -55,6 +55,7 @@ test("WCAG 2.1 AA sem violações: conta e painel do admin", async ({ page }) =>
     "/admin/categorias",
     "/admin/loja",
     "/admin/cupons",
+    "/admin/promocoes",
     "/admin/produtos/1",
   ]) {
     await page.goto(path);

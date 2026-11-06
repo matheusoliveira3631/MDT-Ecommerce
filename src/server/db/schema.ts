@@ -35,6 +35,10 @@ export const produtos = sqliteTable(
     precoBaseCentavos: integer("preco_base_centavos"),
     precoPixCentavos: integer("preco_pix_centavos"),
     precoVaria: integer("preco_varia", { mode: "boolean" }).notNull().default(true),
+    /** Promoção "de/por": preço promocional (centavos) e o período, opcional. Fora do período vale o preço normal. */
+    precoPromoCentavos: integer("preco_promo_centavos"),
+    promoInicioEm: integer("promo_inicio_em", { mode: "timestamp_ms" }),
+    promoFimEm: integer("promo_fim_em", { mode: "timestamp_ms" }),
     pedidoMinimo: integer("pedido_minimo").notNull().default(1),
     prazoProducaoDias: integer("prazo_producao_dias"),
     temas: text("temas", { mode: "json" }).$type<string[]>().notNull().default(sql`'[]'`),
@@ -157,6 +161,8 @@ export const pedidos = sqliteTable(
     freteCentavos: integer("frete_centavos").notNull(),
     cupomCodigo: text("cupom_codigo"),
     descontoCentavos: integer("desconto_centavos").notNull().default(0),
+    /** De onde veio o desconto, para mostrar no pedido: "Cupom MIMO10", "Desconto progressivo (10%)". */
+    descontoDescricao: text("desconto_descricao"),
     subtotalCentavos: integer("subtotal_centavos").notNull(),
     /** O que foi cobrado (no Pix, com os preços do Pix). */
     totalCentavos: integer("total_centavos").notNull(),

@@ -1,7 +1,9 @@
 import "server-only";
 import { and, desc, eq, ne } from "drizzle-orm";
 import { z } from "zod";
+import { endOfDayBR, startOfDayBR, toYmdBR } from "@/lib/dates";
 import { couponUses } from "./coupons";
+import { dateField } from "./admin-catalog";
 import { db } from "./db";
 import { cupons } from "./db/schema";
 
@@ -11,11 +13,6 @@ import { cupons } from "./db/schema";
  * horário de Brasília.
  */
 
-const dateField = z
-  .string()
-  .regex(/^(\d{4}-\d{2}-\d{2})?$/, "Data inválida.")
-  .optional()
-  .transform((v) => v || null);
 
 export const couponSchema = z
   .object({
@@ -45,9 +42,6 @@ export const couponSchema = z
     }
   });
 
-const startOfDay = (d: string) => new Date(`${d}T00:00:00.000-03:00`);
-const endOfDay = (d: string) => new Date(`${d}T23:59:59.999-03:00`);
-const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
 
 export interface AdminCoupon {
   id: number;
@@ -90,8 +84,8 @@ export function adminListCoupons(agora = Date.now()): AdminCoupon[] {
         tipo: c.tipo,
         valor: c.valor,
         pedidoMinimoCentavos: c.pedidoMinimoCentavos,
-        inicio: c.inicioEm ? ymd.format(c.inicioEm) : "",
-        fim: c.fimEm ? ymd.format(c.fimEm) : "",
+        inicio: toYmdBR(c.inicioEm),
+        fim: toYmdBR(c.fimEm),
         limiteUsos: c.limiteUsos,
         umaVezPorCliente: c.umaVezPorCliente,
         ativo: c.ativo,
@@ -118,7 +112,7 @@ export function saveCoupon(raw: unknown): CouponSaveResult {
     .get();
   if (taken) return { ok: false, errors: { codigo: "Já existe um cupom com esse código." } };
 
-  const values = { ...data, inicioEm: inicio ? startOfDay(inicio) : null, fimEm: fim ? endOfDay(fim) : null };
+  const values = { ...data, inicioEm: inicio ? startOfDayBR(inicio) : null, fimEm: fim ? endOfDayBR(fim) : null };
   if (id) {
     const current = db.select().from(cupons).where(eq(cupons.id, id)).get();
     if (!current) return { ok: false, errors: { form: "Cupom não encontrado." } };

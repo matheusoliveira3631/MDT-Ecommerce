@@ -68,7 +68,7 @@ function CartSkeleton() {
 }
 
 export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewProps) {
-  const { lines, hydrated, updateLine, removeLine, restoreLine, coupon, setCoupon } = useCart();
+  const { lines, hydrated, updateLine, removeLine, restoreLine, coupon, setCoupon, tiers } = useCart();
   const [shipping, setShipping] = useState<ShippingOption | null>(null);
   const showToast = useToast();
 
@@ -76,7 +76,7 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
 
   if (!hydrated || !catalog.ready) return <CartSkeleton />;
 
-  const totals = orderTotals(lines, catalog.get, shipping, coupon);
+  const totals = orderTotals(lines, catalog.get, shipping, coupon, tiers);
 
 
   if (lines.length === 0) {
@@ -136,6 +136,8 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           subtotal={totals.subtotal}
           shipping={totals.shipping}
           discount={totals.discount}
+          discountLabel={totals.discountLabel}
+          nextTier={totals.nextTier}
           total={totals.total}
           pixTotal={totals.totalPix}
           parcelas={parcelas}
@@ -155,6 +157,11 @@ export function CartView({ prazoProducao, parcelas, meiosPagamento }: CartViewPr
           />
           <CouponField
             applied={coupon?.codigo}
+            note={
+              totals.couponOutdone
+                ? `O desconto progressivo é maior que o cupom ${coupon?.codigo}: vale ele (os dois não somam).`
+                : undefined
+            }
             onApply={async (code) => {
               const result = await validateCouponAction(code, reaisToCents(totals.subtotal));
               if (!result.ok) return result.erro;

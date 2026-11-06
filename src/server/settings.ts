@@ -3,6 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "./db";
 import { categorias, configuracoes } from "./db/schema";
+import { tiersSchema } from "./promotions";
 import { KEY_PATTERN, publicUrl, removeFile } from "./storage";
 
 /*
@@ -129,5 +130,20 @@ export async function saveHomeSettings(raw: unknown): Promise<SettingsResult> {
   upsert("inicio", parsed.data);
   // A foto trocada ou removida sai do armazenamento
   if (previous && previous !== parsed.data.heroFotoChave) await removeFile(previous).catch(() => undefined);
+  return { ok: true };
+}
+
+/* ---------- Desconto progressivo (Promoções) ---------- */
+
+export function saveCartTiers(raw: unknown): SettingsResult {
+  const parsed = tiersSchema.safeParse(raw);
+  if (!parsed.success) {
+    const errors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) errors[issue.path.join(".") || "form"] ??= issue.message;
+    return { ok: false, errors };
+  }
+  // Guarda em ordem crescente: é assim que o painel e a sacola mostram
+  const faixas = parsed.data.faixas.slice().sort((a, b) => a.minimoCentavos - b.minimoCentavos);
+  upsert("desconto_progressivo", { ...parsed.data, faixas });
   return { ok: true };
 }

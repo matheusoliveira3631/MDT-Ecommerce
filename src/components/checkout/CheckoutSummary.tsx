@@ -10,9 +10,9 @@ import type { ShippingOption } from "@/lib/types";
 
 /** Resumo do checkout: itens em lista compacta + totais. Fixo à direita no desktop. */
 export function CheckoutSummary({ shipping, parcelas }: { shipping: ShippingOption | null; parcelas: string }) {
-  const { lines, coupon } = useCart();
+  const { lines, coupon, tiers } = useCart();
   const catalog = useProducts(lines.map((l) => l.produtoSlug));
-  const totals = orderTotals(lines, catalog.get, shipping, coupon);
+  const totals = orderTotals(lines, catalog.get, shipping, coupon, tiers);
 
   return (
     <aside aria-labelledby="resumo-checkout-title" className="flex flex-col gap-[18px] rounded-lg bg-white p-6 md:p-7 lg:sticky lg:top-6">
@@ -44,6 +44,7 @@ export function CheckoutSummary({ shipping, parcelas }: { shipping: ShippingOpti
         subtotal={totals.subtotal}
         shipping={totals.shipping}
         discount={totals.discount}
+        discountLabel={totals.discountLabel}
         total={totals.total}
         pixTotal={totals.totalPix}
         parcelas={parcelas}

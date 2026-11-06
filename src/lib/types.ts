@@ -1,6 +1,6 @@
 /** Tipos de dados que o design pressupõe. */
 
-export type BadgeVariant = "customizable" | "bestseller" | "new" | "soldout" | "deadline";
+export type BadgeVariant = "customizable" | "bestseller" | "new" | "soldout" | "deadline" | "sale";
 
 export interface ProductBadge {
   tipo: BadgeVariant;
@@ -30,6 +30,10 @@ export interface Product {
   /** `null` enquanto o preço não estiver cadastrado. */
   precoBase: number | null;
   precoPix: number | null;
+  /** Em promoção: o preço normal, que aparece riscado ("de"). `null` fora de promoção. */
+  precoDe: number | null;
+  /** Fim da promoção (ISO), quando tem data. */
+  promoFim: string | null;
   /** Mostra "a partir de" quando o preço varia por quantidade ou opção. */
   precoVaria: boolean;
   pedidoMinimo: number;

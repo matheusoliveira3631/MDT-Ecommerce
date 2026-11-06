@@ -56,7 +56,16 @@ export default async function AdminProductsPage() {
                   </td>
                   <td className="px-4 py-3">{p.categoria}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {p.precoBaseCentavos == null ? <span className="text-ink-muted">Sem preço</span> : formatPrice(p.precoBaseCentavos / 100)}
+                    {p.precoBaseCentavos == null ? (
+                      <span className="text-ink-muted">Sem preço</span>
+                    ) : p.emPromocao && p.precoPromoCentavos != null ? (
+                      <>
+                        <s className="text-ink-muted">{formatPrice(p.precoBaseCentavos / 100)}</s>{" "}
+                        <strong className="text-lilac-ink">{formatPrice(p.precoPromoCentavos / 100)}</strong>
+                      </>
+                    ) : (
+                      formatPrice(p.precoBaseCentavos / 100)
+                    )}
                   </td>
                   <td className={cn("px-4 py-3", p.estoque === 0 && "font-bold text-error")}>{p.estoque === 0 ? "Esgotado" : p.estoque}</td>
                   <td className="px-4 py-3">
@@ -70,6 +79,7 @@ export default async function AdminProductsPage() {
                         {p.ativo ? "Ativo" : "Inativo"}
                       </span>
                       {p.destaque && <span className="rounded-pill bg-primary px-2.5 py-1 text-xs font-extrabold text-white">Destaque</span>}
+                      {p.emPromocao && <span className="rounded-pill bg-lilac-ink px-2.5 py-1 text-xs font-extrabold text-white">Promoção</span>}
                     </div>
                   </td>
                 </tr>

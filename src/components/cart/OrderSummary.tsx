@@ -7,8 +7,12 @@ export interface OrderSummaryProps {
   subtotal: number | null;
   /** `undefined` enquanto o CEP não foi informado. */
   shipping?: number | null;
-  /** `undefined` sem cupom aplicado. */
+  /** `undefined` sem cupom e sem desconto progressivo. */
   discount?: number | null;
+  /** "Cupom MIMO10" ou "Desconto progressivo (10%)". */
+  discountLabel?: string;
+  /** Aviso da próxima faixa do desconto progressivo. */
+  nextTier?: { falta: number; percentual: number } | null;
   total: number | null;
   pixTotal: number | null;
   parcelas: string;
@@ -20,11 +24,11 @@ export interface OrderSummaryProps {
 
 export type TotalsListProps = Pick<
   OrderSummaryProps,
-  "subtotal" | "shipping" | "discount" | "total" | "pixTotal" | "parcelas"
+  "subtotal" | "shipping" | "discount" | "discountLabel" | "total" | "pixTotal" | "parcelas"
 >;
 
 /** Subtotal, frete, desconto, total e a linha do Pix/parcelas. */
-export function TotalsList({ subtotal, shipping, discount, total, pixTotal, parcelas }: TotalsListProps) {
+export function TotalsList({ subtotal, shipping, discount, discountLabel, total, pixTotal, parcelas }: TotalsListProps) {
   return (
     <>
       <dl className="m-0 grid grid-cols-[1fr_auto] gap-2.5 border-t border-border pt-[18px] text-body">
@@ -40,7 +44,7 @@ export function TotalsList({ subtotal, shipping, discount, total, pixTotal, parc
         </dd>
         {discount !== undefined && (
           <>
-            <dt className="text-ink-muted">Desconto</dt>
+            <dt className="text-ink-muted">{discountLabel ?? "Desconto"}</dt>
             <dd className="m-0 text-right">−{formatPrice(discount, "R$ [0,00]")}</dd>
           </>
         )}
@@ -59,6 +63,8 @@ export function OrderSummary({
   subtotal,
   shipping,
   discount,
+  discountLabel,
+  nextTier,
   total,
   pixTotal,
   parcelas,
@@ -79,10 +85,17 @@ export function OrderSummary({
         subtotal={subtotal}
         shipping={shipping}
         discount={discount}
+        discountLabel={discountLabel}
         total={total}
         pixTotal={pixTotal}
         parcelas={parcelas}
       />
+      {nextTier && (
+        <p role="status" className="m-0 rounded-md bg-lilac-50 px-4 py-3 text-sm text-ink">
+          Faltam <strong>{formatPrice(nextTier.falta)}</strong> para ganhar{" "}
+          <strong className="text-lilac-ink">{nextTier.percentual}% de desconto</strong> no pedido.
+        </p>
+      )}
       <Link href={checkoutHref} className={buttonClasses({ size: "lg", fullWidth: true })}>
         Finalizar compra
       </Link>

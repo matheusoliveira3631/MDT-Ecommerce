@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { sameLine, type CartLine } from "@/lib/cart";
 import type { CouponRule } from "@/lib/pricing";
+import type { CartTier } from "@/lib/promo";
 
 const STORAGE_KEY = "mimos-da-thaty:sacola";
 const COUPON_KEY = "mimos-da-thaty:cupom";
@@ -23,6 +24,8 @@ interface CartContextValue {
   clearCart: () => void;
   coupon: AppliedCoupon | null;
   setCoupon: (coupon: AppliedCoupon | null) => void;
+  /** Faixas do desconto progressivo (Painel → Promoções), lidas do servidor. */
+  tiers: CartTier[];
   drawerOpen: boolean;
   /** Abre a sacola lateral; ao fechar, o foco volta para onde estava. */
   openDrawer: () => void;
@@ -68,7 +71,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
+  const [tiers, setTiers] = useState<CartTier[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/promocoes")
+      .then((r) => (r.ok ? r.json() : { faixas: [] }))
+      .then((data: { faixas?: CartTier[] }) => {
+        if (!cancelled) setTiers(data.faixas ?? []);
+      })
+      // Sem as faixas, a sacola mostra o total sem o desconto; o pedido aplica no servidor de qualquer jeito
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setLines(readStorage());
@@ -142,11 +160,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       coupon,
       setCoupon,
+      tiers,
       drawerOpen,
       openDrawer,
       closeDrawer,
     }),
-    [lines, hydrated, addLine, updateLine, removeLine, restoreLine, clearCart, coupon, drawerOpen, openDrawer, closeDrawer],
+    [lines, hydrated, addLine, updateLine, removeLine, restoreLine, clearCart, coupon, tiers, drawerOpen, openDrawer, closeDrawer],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

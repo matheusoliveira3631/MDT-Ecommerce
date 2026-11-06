@@ -5,6 +5,7 @@ import { cache } from "react";
 import type { Category, Product } from "@/lib/types";
 import { db } from "./db";
 import { categorias, produtoFotos, produtos, type CategoriaRow, type ProdutoFotoRow, type ProdutoRow } from "./db/schema";
+import { effectivePrices, promoPercent } from "@/lib/promo";
 import { publicUrl } from "./storage";
 
 /*
@@ -19,6 +20,11 @@ export function toCategory(row: CategoriaRow): Category {
 }
 
 export function toProduct(row: ProdutoRow, categoria: CategoriaRow, fotos: ProdutoFotoRow[]): Product {
+  // Durante a promoção, o preço que vale é o promocional e o normal vira o "de", riscado
+  const prices = effectivePrices(row);
+  const selos = prices.de != null && prices.base != null
+    ? [{ tipo: "sale" as const, label: `-${promoPercent(prices.de, prices.base)}%` }, ...row.selos]
+    : row.selos;
   return {
     id: row.id,
     slug: row.slug,
@@ -32,15 +38,17 @@ export function toProduct(row: ProdutoRow, categoria: CategoriaRow, fotos: Produ
       .slice()
       .sort((a, b) => a.posicao - b.posicao)
       .map((f) => ({ src: publicUrl(f.chave), alt: f.alt || row.nome, chave: f.chave })),
-    precoBase: centsToReais(row.precoBaseCentavos),
-    precoPix: centsToReais(row.precoPixCentavos),
+    precoBase: centsToReais(prices.base),
+    precoPix: centsToReais(prices.pix),
+    precoDe: centsToReais(prices.de),
+    promoFim: prices.de != null && row.promoFimEm ? row.promoFimEm.toISOString() : null,
     precoVaria: row.precoVaria,
     pedidoMinimo: row.pedidoMinimo,
     prazoProducaoDias: row.prazoProducaoDias,
     temas: row.temas,
     cores: row.cores,
     aceitaReferencia: row.aceitaReferencia,
-    selos: row.selos,
+    selos,
     estoque: row.estoque,
     ativo: row.ativo,
     destaque: row.destaque,

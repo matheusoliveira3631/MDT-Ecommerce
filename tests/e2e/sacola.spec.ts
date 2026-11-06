@@ -29,7 +29,7 @@ test("remover com desfazer, cupom e persistência", async ({ page }) => {
   await page.getByLabel("Cupom de desconto").fill("mimo10");
   await page.getByRole("button", { name: "Aplicar" }).click();
   await expect(page.getByText("Cupom MIMO10 aplicado")).toBeVisible();
-  await expect(page.locator("aside dl")).toContainText("Desconto");
+  await expect(page.locator("aside dl")).toContainText("Cupom MIMO10");
 
   await page.reload();
   await expect(items).toHaveCount(2);

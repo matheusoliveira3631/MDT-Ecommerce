@@ -137,7 +137,7 @@ export default async function AdminOrderPage({ params }: PageProps) {
               <dd className="m-0 text-right">{reais(pedido.freteCentavos)}</dd>
               {pedido.descontoCentavos > 0 && (
                 <>
-                  <dt className="text-ink-muted">Desconto{pedido.cupomCodigo ? ` (${pedido.cupomCodigo})` : ""}</dt>
+                  <dt className="text-ink-muted">{pedido.descontoDescricao ?? `Desconto${pedido.cupomCodigo ? ` (${pedido.cupomCodigo})` : ""}`}</dt>
                   <dd className="m-0 text-right">−{reais(pedido.descontoCentavos)}</dd>
                 </>
               )}

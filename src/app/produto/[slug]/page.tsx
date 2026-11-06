@@ -14,6 +14,8 @@ import { helpLinks, store } from "@/data/mock";
 import { listarCategorias, obterProduto, produtosRelacionados } from "@/server/catalog";
 import { formatPrice } from "@/lib/format";
 
+const dayMonth = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -72,7 +74,19 @@ export default async function ProductPage({ params }: PageProps) {
             </div>
 
             <div className="flex flex-col gap-1.5 rounded-md bg-rose-50 px-[22px] py-5">
+              {product.precoDe != null && (
+                <span className="flex flex-wrap items-center gap-x-2 text-body">
+                  <s className="text-ink-muted">
+                    <span className="sr-only">De </span>
+                    {formatPrice(product.precoDe)}
+                  </s>
+                  <span className="font-bold text-lilac-ink">
+                    Promoção{product.promoFim ? ` até ${dayMonth.format(new Date(product.promoFim))}` : ""}
+                  </span>
+                </span>
+              )}
               <span className="font-heading text-price">
+                {product.precoDe != null && <span className="sr-only">Por </span>}
                 {formatPrice(product.precoBase)}{" "}
                 <span className="font-body text-base font-semibold text-ink-muted">/ unidade</span>
               </span>

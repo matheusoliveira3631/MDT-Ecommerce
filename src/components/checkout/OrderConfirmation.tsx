@@ -196,7 +196,7 @@ export function OrderConfirmation({ order, whatsapp }: { order: OrderView; whats
           <dd className="m-0 text-right">{reais(order.freteCentavos)}</dd>
           {order.descontoCentavos > 0 && (
             <>
-              <dt className="text-ink-muted">Desconto{order.cupom ? ` (${order.cupom})` : ""}</dt>
+              <dt className="text-ink-muted">{order.descontoDescricao ?? `Desconto${order.cupom ? ` (${order.cupom})` : ""}`}</dt>
               <dd className="m-0 text-right">−{reais(order.descontoCentavos)}</dd>
             </>
           )}

@@ -8,10 +8,12 @@ export interface CouponFieldProps {
   /** Devolve `null` se o cupom foi aceito, ou a mensagem do motivo (expirado, pedido mínimo...). */
   onApply: (code: string) => Promise<string | null>;
   applied?: string | null;
+  /** Ex.: o cupom perdeu para o desconto progressivo (não somam). */
+  note?: string;
 }
 
 /** Mesmo padrão do frete: input pill + botão `soft`. */
-export function CouponField({ onApply, applied }: CouponFieldProps) {
+export function CouponField({ onApply, applied, note }: CouponFieldProps) {
   const id = useId();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ export function CouponField({ onApply, applied }: CouponFieldProps) {
       )}
       {!error && applied && (
         <span id={`${id}-ok`} role="status" className="text-sm font-bold text-primary">
-          Cupom {applied} aplicado
+          {note ?? `Cupom ${applied} aplicado`}
         </span>
       )}
     </div>

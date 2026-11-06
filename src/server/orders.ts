@@ -1,14 +1,16 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
-import { OTHER_THEME } from "@/lib/cart";
+import { discountLabel, OTHER_THEME } from "@/lib/cart";
 import type { OrderView } from "@/lib/checkout";
 import { isValidCpf } from "@/lib/format";
 import { computeTotals, type CouponRule } from "@/lib/pricing";
+import { effectivePrices } from "@/lib/promo";
 import { REFERENCE_PATTERN } from "@/lib/uploads";
 import type { Database } from "./db/connect";
 import { pedidoHistorico, pedidoItens, pedidos, produtos, type PedidoRow } from "./db/schema";
 import { checkCoupon } from "./coupons";
+import { activeCartTiers } from "./promotions";
 import type { Charge, ChargeRequest } from "./payments";
 import type { ShippingItem, ShippingQuote } from "./shipping";
 
@@ -119,8 +121,11 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
         throw new OrderError(`${produto.nome}: escolha uma das cores disponíveis.`);
       }
       quantities.set(produto.id, (quantities.get(produto.id) ?? 0) + item.quantidade);
-      const unit = usePix ? (produto.precoPixCentavos ?? produto.precoBaseCentavos) : produto.precoBaseCentavos;
-      return { produto, item, unit };
+      // Preço que vale agora: o promocional, durante a promoção do produto
+      const prices = effectivePrices(produto);
+      const unitBase = prices.base!;
+      const unitPix = prices.pix ?? unitBase;
+      return { produto, item, unitBase, unitPix, unit: usePix ? unitPix : unitBase };
     });
 
     for (const [id, quantidade] of quantities) {
@@ -147,7 +152,8 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
     if (!frete) throw new OrderError("Esse frete não está disponível para o CEP. Escolha de novo.");
     if (frete.valorCentavos == null) throw new OrderError("O valor do frete para esse CEP ainda não está disponível.");
 
-    const priced = lines.map((l) => ({ quantidade: l.item.quantidade, unitCents: l.unit, unitPixCents: null }));
+    // Mesma conta da sacola: faixas e compra mínima pelo subtotal normal; no Pix, cobra os valores do Pix
+    const priced = lines.map((l) => ({ quantidade: l.item.quantidade, unitCents: l.unitBase, unitPixCents: l.unitPix }));
     const subtotalCentavos = computeTotals(priced, 0, null).subtotal;
     const cpf = input.cliente.cpf.replace(/\D/g, "");
     let coupon: CouponRule | null = null;
@@ -157,15 +163,20 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
       coupon = check.rule;
     }
 
-    const totals = computeTotals(priced, frete.valorCentavos, coupon);
+    const t = computeTotals(priced, frete.valorCentavos, coupon, activeCartTiers(db));
+    const totals = usePix
+      ? { subtotal: t.subtotalPix, discount: t.discountPix, total: t.totalPix }
+      : { subtotal: t.subtotal, discount: t.discount, total: t.total };
     if (totals.total == null || totals.subtotal == null) throw new OrderError("Não foi possível calcular o total.");
     if (totals.total <= 0) throw new OrderError("O total do pedido precisa ser maior que zero.");
+    // Cupom que perdeu para o desconto progressivo não conta como usado
+    const usedCoupon = t.discountSource === "cupom" ? coupon : null;
 
     const token = randomBytes(24).toString("base64url");
     const pedidoId = db.transaction((tx) => {
       // Limite de usos conferido de novo aqui: dois pedidos ao mesmo tempo não passam do limite
-      if (coupon) {
-        const recheck = checkCoupon(tx, coupon.codigo, { subtotalCentavos, cpf });
+      if (usedCoupon) {
+        const recheck = checkCoupon(tx, usedCoupon.codigo, { subtotalCentavos, cpf });
         if (!recheck.ok) throw new OrderError(`${recheck.erro} Remova o cupom na sacola para continuar.`);
       }
       const id = tx
@@ -183,8 +194,9 @@ export async function createOrder(db: Database, raw: unknown, deps: OrderDeps): 
           freteServico: frete.servico,
           fretePrazo: frete.prazo,
           freteCentavos: frete.valorCentavos!,
-          cupomCodigo: coupon?.codigo ?? null,
+          cupomCodigo: usedCoupon?.codigo ?? null,
           descontoCentavos: totals.discount ?? 0,
+          descontoDescricao: discountLabel(t.discountSource, coupon, t.tier) ?? null,
           subtotalCentavos: totals.subtotal!,
           totalCentavos: totals.total!,
           pagamentoMetodo: input.pagamento,
@@ -358,6 +370,7 @@ export function getOrderForCustomer(db: Database, numero: string, token: string)
     freteServico: pedido.freteServico,
     descontoCentavos: pedido.descontoCentavos,
     cupom: pedido.cupomCodigo,
+    descontoDescricao: pedido.descontoDescricao,
     totalCentavos: pedido.totalCentavos,
     rastreio: pedido.codigoRastreio,
   };

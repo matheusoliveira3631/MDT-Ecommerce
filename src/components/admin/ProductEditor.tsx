@@ -7,7 +7,9 @@ import { deleteProductAction, saveProductAction } from "@/app/admin/actions";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { TextArea, TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/ToastProvider";
+import { toYmdBR } from "@/lib/dates";
 import { centsToInput, maskBRL, parseBRLToCents, slugify } from "@/lib/format";
+import { promoPercent } from "@/lib/promo";
 import type { BadgeVariant, ProductColor } from "@/lib/types";
 import { Checkbox, FormSection, SelectField, TagsInput } from "./fields";
 import { PhotoUploader, type UploadedPhoto } from "./PhotoUploader";
@@ -23,6 +25,9 @@ export interface ProductEditorInitial {
   precoBaseCentavos: number | null;
   precoPixCentavos: number | null;
   precoVaria: boolean;
+  precoPromoCentavos: number | null;
+  promoInicioEm: Date | null;
+  promoFimEm: Date | null;
   pedidoMinimo: number;
   prazoProducaoDias: number | null;
   estoque: number;
@@ -47,11 +52,18 @@ const EDITABLE_BADGES: Array<{ tipo: "customizable" | "bestseller" | "new"; labe
 
 /** Ordem dos campos na tela: o foco vai para o primeiro com erro. */
 const FIELD_ORDER = [
-  "nome", "categoriaId", "resumo", "descricao", "medidas", "precoBaseCentavos", "precoPixCentavos",
+  "nome", "categoriaId", "resumo", "descricao", "medidas", "precoBaseCentavos", "precoPixCentavos", "precoPromoCentavos", "promoInicio", "promoFim",
   "pedidoMinimo", "prazoProducaoDias", "estoque", "pesoGramas", "alturaCm", "larguraCm", "comprimentoCm", "temas", "cores", "selos", "fotos",
 ];
 
 const toInt = (value: string): number | null => (value.trim() === "" ? null : Number(value));
+
+/** "15% de desconto" abaixo do preço promocional, enquanto digita. */
+function promoHint(base: number | null, promo: number | null): string {
+  if (base == null || promo == null || Number.isNaN(base) || Number.isNaN(promo)) return "Vazio = sem promoção.";
+  if (promo >= base) return "Precisa ser menor que o preço normal.";
+  return `${promoPercent(base, promo)}% de desconto no selo.`;
+}
 
 export function ProductEditor({
   initial,
@@ -75,6 +87,9 @@ export function ProductEditor({
   const [precoBase, setPrecoBase] = useState(centsToInput(initial.precoBaseCentavos));
   const [precoPix, setPrecoPix] = useState(centsToInput(initial.precoPixCentavos));
   const [precoVaria, setPrecoVaria] = useState(initial.precoVaria);
+  const [precoPromo, setPrecoPromo] = useState(centsToInput(initial.precoPromoCentavos));
+  const [promoInicio, setPromoInicio] = useState(toYmdBR(initial.promoInicioEm));
+  const [promoFim, setPromoFim] = useState(toYmdBR(initial.promoFimEm));
   const [pedidoMinimo, setPedidoMinimo] = useState(String(initial.pedidoMinimo));
   const [prazo, setPrazo] = useState(initial.prazoProducaoDias == null ? "" : String(initial.prazoProducaoDias));
   const [estoque, setEstoque] = useState(String(initial.estoque));
@@ -113,6 +128,7 @@ export function ProductEditor({
     e.preventDefault();
     const precoBaseCentavos = parseBRLToCents(precoBase);
     const precoPixCentavos = parseBRLToCents(precoPix);
+    const precoPromoCentavos = parseBRLToCents(precoPromo);
     const local: Record<string, string> = {};
     if (Number.isNaN(precoBaseCentavos)) local.precoBaseCentavos = "Use o formato 12,50.";
     if (Number.isNaN(precoPixCentavos)) local.precoPixCentavos = "Use o formato 12,50.";
@@ -133,6 +149,9 @@ export function ProductEditor({
       precoBaseCentavos,
       precoPixCentavos,
       precoVaria,
+      precoPromoCentavos,
+      promoInicio,
+      promoFim,
       pedidoMinimo: toInt(pedidoMinimo) ?? 1,
       prazoProducaoDias: toInt(prazo),
       estoque: toInt(estoque) ?? 0,
@@ -248,6 +267,31 @@ export function ProductEditor({
           </div>
           <div data-field="estoque">
             <TextField label="Estoque" hint="0 = esgotado" type="number" min={0} inputMode="numeric" value={estoque} onChange={(e) => setEstoque(e.target.value)} error={errors.estoque} />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Promoção"
+        description="Preço “de/por”: durante o período, a loja mostra o preço normal riscado, o promocional e o selo com a porcentagem. O Pix mantém o mesmo desconto sobre o preço promocional. Sem datas, vale enquanto o preço estiver preenchido."
+      >
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div data-field="precoPromoCentavos">
+            <TextField
+              label="Preço promocional (R$)"
+              hint={promoHint(parseBRLToCents(precoBase), parseBRLToCents(precoPromo))}
+              inputMode="numeric"
+              placeholder="0,00"
+              value={precoPromo}
+              onChange={(e) => setPrecoPromo(maskBRL(e.target.value))}
+              error={errors.precoPromoCentavos}
+            />
+          </div>
+          <div data-field="promoInicio">
+            <TextField label="Começa em" type="date" value={promoInicio} onChange={(e) => setPromoInicio(e.target.value)} error={errors.promoInicio} />
+          </div>
+          <div data-field="promoFim">
+            <TextField label="Termina em" type="date" value={promoFim} onChange={(e) => setPromoFim(e.target.value)} error={errors.promoFim} />
           </div>
         </div>
       </FormSection>

@@ -49,8 +49,17 @@ export function ProductCard({ product, variant = "default", onFavorite, priority
   const selo = soldOut ? { tipo: "soldout" as const } : product.selos[0];
   const price = (
     <span className="text-body text-ink">
+      {product.precoDe != null && (
+        <>
+          <s className="text-ink-muted">
+            <span className="sr-only">de </span>
+            {formatPrice(product.precoDe)}
+          </s>{" "}
+          <span className="sr-only">por </span>
+        </>
+      )}
       {product.precoVaria && "a partir de "}
-      <strong>{formatPrice(product.precoBase)}</strong>
+      <strong className={product.precoDe != null ? "text-lilac-ink" : undefined}>{formatPrice(product.precoBase)}</strong>
     </span>
   );
 

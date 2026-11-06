@@ -12,7 +12,7 @@ import {
   saveProduct,
   type SaveResult,
 } from "@/server/admin-catalog";
-import { saveHomeSettings, saveSeasonalCollections, type SettingsResult } from "@/server/settings";
+import { saveCartTiers, saveHomeSettings, saveSeasonalCollections, type SettingsResult } from "@/server/settings";
 import { createUpload, UPLOAD_FOLDERS, type UploadFolder, type UploadTicket } from "@/server/storage";
 
 /*
@@ -84,6 +84,11 @@ export async function deleteCouponAction(id: number): Promise<{ ok: true } | Act
     const result = deleteCoupon(id);
     return result.ok ? result : { ok: false as const, errors: { form: result.error } };
   });
+}
+
+/** Desconto progressivo do carrinho (Promoções). */
+export async function saveCartTiersAction(input: unknown): Promise<SettingsResult | ActionError> {
+  return guarded(async () => saveCartTiers(input));
 }
 
 /** Coleções sazonais (faixas da página inicial). */

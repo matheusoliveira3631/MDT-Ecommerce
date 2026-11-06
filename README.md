@@ -96,6 +96,12 @@ Uma chave de idempotência por tentativa evita pedido duplicado (duplo clique, r
 
 Na página do produto, a cliente pode enviar uma imagem do convite ou da decoração (JPG, PNG ou WebP, até 8 MB, 20 envios por hora por IP). Ela vai direto para a pasta privada `referencias/` do S3 e o pedido guarda só a chave. A imagem aparece na confirmação do pedido (para quem tem o link com o token) e no detalhe do pedido no painel, sempre por links temporários de 1 hora. Precisa da regra "ReferenciasDasClientes" de `deploy/iam-policy.json` no papel da instância; a política pública do bucket não inclui essa pasta.
 
+### Promoções
+
+- **Por produto ("de/por")**: no cadastro do produto, "Preço promocional" com início e fim opcionais. Durante o período, a loja mostra o preço normal riscado, o promocional e o selo com a porcentagem; o Pix mantém o mesmo desconto do Pix sobre o promocional. O pedido cobra o promocional (`src/lib/promo.ts`, a mesma conta na vitrine e no servidor).
+- **Por carrinho (desconto progressivo)**: em Painel → Promoções, até 5 faixas "compras a partir de R$ X, Y% de desconto", automáticas, sem código. A sacola avisa quanto falta para a próxima faixa.
+- **Regra de soma**: a promoção do produto sempre vale. Desconto progressivo e cupom não somam: a loja aplica o que der mais desconto, e o cupom que perdeu não conta como usado.
+
 ### Cupons
 
 Em Painel → Cupons: código, desconto em % ou em R$, compra mínima, período de validade (dias inteiros, horário de Brasília), limite total de usos, "uma vez por cliente" (pelo CPF) e ativo/pausado. A sacola explica por que um cupom não vale (expirado, compra mínima...), e o fechamento do pedido confere tudo de novo, com o limite de usos dentro da transação. O uso conta pelos pedidos não cancelados; cupom já usado não pode ser excluído nem trocar de código, só pausado.

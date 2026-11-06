@@ -264,3 +264,47 @@ test("cupom cadastrado no painel vale na sacola, com compra mínima e pausa", as
   await page.getByRole("button", { name: `Excluir ${codigo}` }).click();
   await expect(page.getByRole("listitem").filter({ hasText: codigo })).toHaveCount(0);
 });
+
+test("promoções: preço de/por no produto e desconto progressivo com aviso na sacola", async ({ page, browser }) => {
+  test.setTimeout(90_000);
+  await loginAs(page, TEST_USERS.admin, "/admin/produtos");
+  await page.getByRole("link", { name: "Topo de bolo em camadas" }).click();
+  await page.getByLabel("Preço promocional (R$)").pressSequentially("3990");
+  await expect(page.getByText("13% de desconto no selo.")).toBeVisible();
+  await page.getByRole("button", { name: "Salvar alterações" }).click();
+  await expect(page.getByText("Produto salvo")).toBeVisible();
+
+  // Faixa alta o bastante para não mexer nos outros testes; a sacola avisa quanto falta
+  await page.goto("/admin/promocoes");
+  await expect(page.getByRole("listitem").filter({ hasText: "Topo de bolo em camadas" })).toContainText("valendo");
+  await page.getByLabel("Ativo").check();
+  await page.getByRole("button", { name: "Adicionar faixa" }).click();
+  await page.getByLabel("Faixa 1: compras a partir de (R$)").pressSequentially("500000");
+  await page.getByLabel("Faixa 1: desconto (%)").fill("10");
+  await page.getByRole("button", { name: "Salvar desconto progressivo" }).click();
+  await expect(page.getByText("Desconto progressivo salvo")).toBeVisible();
+
+  const clienteContext = await browser.newContext();
+  const cliente = await clienteContext.newPage();
+  await cliente.goto("/produto/topo-de-bolo-em-camadas");
+  await expect(cliente.locator("main s").first()).toHaveText(/De\s*R\$\s45,90/);
+  await expect(cliente.getByText("Promoção", { exact: true })).toBeVisible();
+  await cliente.goto("/categoria/topos-de-bolo");
+  await expect(cliente.locator("main article").first()).toContainText("-13%");
+
+  await addToCart(cliente, "Lara");
+  await cliente.goto("/sacola");
+  await expect(cliente.getByRole("status").filter({ hasText: "Faltam" })).toContainText(/Faltam R\$\s4\.890,00 para ganhar 10% de desconto/);
+  await clienteContext.close();
+
+  // Volta como estava
+  await page.goto("/admin/promocoes");
+  await page.getByRole("button", { name: "Remover faixa 1" }).click();
+  await page.getByLabel("Ativo").uncheck();
+  await page.getByRole("button", { name: "Salvar desconto progressivo" }).click();
+  await expect(page.getByText("Desconto progressivo salvo")).toBeVisible();
+  await page.getByRole("link", { name: "Topo de bolo em camadas" }).click();
+  await page.getByLabel("Preço promocional (R$)").fill("");
+  await page.getByRole("button", { name: "Salvar alterações" }).click();
+  await expect(page.getByText("Produto salvo")).toBeVisible();
+});
